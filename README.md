@@ -104,17 +104,62 @@ fullstack-roadmap-erp-bootcamp/
 │   │   ├── release-template.md
 │   │   └── retrospective-template.md
 │   │
-│   ├── 08-sprints/
-│   │   ├── sprint-00.md
-│   │   ├── sprint-01.md
-│   │   ├── sprint-02.md
-│   │   └── ...
+│   08-sprints/
 │   │
+│   ├── README.md
+│   │
+│   ├── phase-00-foundation/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-00-project-foundation.md
+│   │   └── sprint-01-application-foundation.md
+│   │
+│   ├── phase-01-core-platform/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-02-identity-access-management.md
+│   │   └── sprint-03-organization-employee-management.md
+│   │
+│   ├── phase-02-erp-business-modules/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-04-human-resource-management.md
+│   │   ├── sprint-05-inventory-management.md
+│   │   ├── sprint-06-sales-management.md
+│   │   └── sprint-07-purchasing-management.md
+│   │
+│   ├── phase-03-enterprise-capabilities/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-08-finance-accounting.md
+│   │   ├── sprint-09-reporting-analytics.md
+│   │   └── sprint-10-notification-workflow-engine.md
+│   │
+│   ├── phase-04-production-readiness/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-11-security-hardening.md
+│   │   ├── sprint-12-performance-scalability.md
+│   │   └── sprint-13-production-release.md
+│   │
+│   └── phase-05-engineering-maturity/
+│   │   │
+│   │   ├── phase-overview.md
+│   │   │
+│   │   ├── sprint-14-refactoring-technical-debt.md
+│   │   ├── sprint-15-observability-monitoring.md
+│   │   └── sprint-16-final-capstone-release.md
+│   │   │
 │   └── references/
-│       ├── glossary.md
-│       ├── terminology.md
-│       ├── learning-resources.md
-│       └── recommended-books.md
+│   ├── glossary.md
+│   ├── terminology.md
+│   ├── learning-resources.md
+│   └── recommended-books.md
 │
 ├── docs/
 │   ├── BRD/
