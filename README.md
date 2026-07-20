@@ -154,7 +154,7 @@ fullstack-roadmap-erp-bootcamp/
 │   │   ├── sprint-14-refactoring-technical-debt.md
 │   │   ├── sprint-15-observability-monitoring.md
 │   │   └── sprint-16-final-capstone-release.md
-│   │   │
+│   │
 │   └── references/
 │   ├── glossary.md
 │   ├── terminology.md
