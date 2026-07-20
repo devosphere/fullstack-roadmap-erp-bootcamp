@@ -131,6 +131,7 @@ fullstack-roadmap-erp-bootcamp/
 ├── database/
 ├── infrastructure/
 ├── tests/
+├── scripts/
 ├── .github/
 │   ├── workflows/
 │   ├── ISSUE_TEMPLATE/
