@@ -129,6 +129,7 @@ fullstack-roadmap-erp-bootcamp/
 ├── frontend/
 ├── backend/
 ├── database/
+├── infrastructure/
 ├── tests/
 ├── .github/
 │   ├── workflows/
