@@ -22,6 +22,22 @@ The objective is not simply to build an ERP.
 The objective is to become a professional software engineer capable of delivering enterprise software from business requirements through production deployment.
 
 # Directory Structure
+```text
+fullstack-roadmap-erp-bootcamp/
+│
+├── academy/          # Learning materials
+├── docs/             # Student-created documentation
+├── frontend/
+├── backend/
+├── database/
+├── infrastructure/   # Docker, Compose, deployment configs
+├── tests/
+├── scripts/          # Helper scripts
+├── .github/
+├── README.md
+├── CHANGELOG.md
+├── CONTRIBUTING.md
+└── LICENSE
 
 fullstack-roadmap-erp-bootcamp/
 │
@@ -122,3 +138,4 @@ fullstack-roadmap-erp-bootcamp/
 ├── README.md
 ├── CHANGELOG.md
 └── CONTRIBUTING.md
+```
