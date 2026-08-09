@@ -344,6 +344,101 @@ Focus:
 
 ---
 
+# Sprint Document Index
+
+Every phase and sprint in the roadmap has a document. Each phase folder contains a
+`phase-overview.md` and one file per sprint.
+
+```text
+academy/08-sprints/
+
+├── README.md                                   (this roadmap)
+│
+├── phase-00-foundation/
+│   ├── phase-overview.md
+│   ├── sprint-00-project-foundation.md
+│   └── sprint-01-application-foundation.md
+│
+├── phase-01-core-platform/
+│   ├── phase-overview.md
+│   ├── sprint-02-identity-access-management.md
+│   └── sprint-03-organization-employee-management.md
+│
+├── phase-02-erp-business-modules/
+│   ├── phase-overview.md
+│   ├── sprint-04-human-resource-management.md
+│   ├── sprint-05-inventory-management.md
+│   ├── sprint-06-sales-management.md
+│   └── sprint-07-purchasing-management.md
+│
+├── phase-03-enterprise-capabilities/
+│   ├── phase-overview.md
+│   ├── sprint-08-finance-accounting.md
+│   ├── sprint-09-reporting-analytics.md
+│   └── sprint-10-workflow-notification-engine.md
+│
+├── phase-04-production-readiness/
+│   ├── phase-overview.md
+│   ├── sprint-11-security-hardening.md
+│   ├── sprint-12-performance-scalability.md
+│   └── sprint-13-production-release.md
+│
+└── phase-05-engineering-maturity/
+    ├── phase-overview.md
+    ├── sprint-14-refactoring-technical-debt.md
+    ├── sprint-15-monitoring-observability.md
+    └── sprint-16-final-capstone-release.md
+```
+
+The blank phase overview template lives at `academy/07-templates/8-phase-overview-template.md`.
+
+---
+
+# GitHub Issue Roster
+
+Issue numbers are assigned by the sprint documents and are the traceability key between a
+sprint, a branch, a Pull Request, and a release. They are allocated once and never reused.
+
+| Sprint | Epic | Issues | Count | Release |
+|--------|------|--------|-------|---------|
+| Sprint 00 | Project Foundation & Engineering Setup | 001 - 004 | 4 | v0.1.0 |
+| Sprint 01 | Application Foundation | 005 - 009 | 5 | v0.2.0 |
+| Sprint 02 | Identity & Access Management | 010 - 015 | 6 | v0.3.0 |
+| Sprint 03 | Organization & Employee Management | 016 - 021 | 6 | v0.4.0 |
+| Sprint 04 | Human Resource Management | 022 - 028 | 7 | v0.5.0 |
+| Sprint 05 | Inventory Management | 029 - 035 | 7 | v0.6.0 |
+| Sprint 06 | Sales Management | 036 - 042 | 7 | v0.7.0 |
+| Sprint 07 | Purchasing Management | 043 - 049 | 7 | v0.8.0 |
+| Sprint 08 | Finance & Accounting | 050 - 056 | 7 | v0.9.0 |
+| Sprint 09 | Reporting & Analytics | 057 - 062 | 6 | v0.10.0 |
+| Sprint 10 | Workflow & Notification Engine | 063 - 068 | 6 | v0.11.0 |
+| Sprint 11 | Security Hardening | 069 - 074 | 6 | v0.12.0 |
+| Sprint 12 | Performance & Scalability | 075 - 080 | 6 | v0.13.0 |
+| Sprint 13 | Production Release | 081 - 086 | 6 | v1.0.0 |
+| Sprint 14 | Refactoring & Technical Debt Reduction | 087 - 092 | 6 | v1.1.0 |
+| Sprint 15 | Monitoring & Observability | 093 - 098 | 6 | v1.2.0 |
+| Sprint 16 | Final Capstone Release | 099 - 104 | 6 | v2.0.0 |
+
+**Total: 17 sprints, 17 epics, 104 issues, 17 releases.**
+
+---
+
+# Issue Types
+
+Issues use the five types defined in the issue templates.
+
+| Type | Used For |
+|------|----------|
+| Feature | New user-facing or business capability |
+| Bug | A defect in existing behaviour |
+| Task | Engineering or infrastructure work with no direct user-facing change |
+| Improvement | Refactoring, hardening, or optimizing existing behaviour |
+| Documentation | Written deliverables |
+
+Issue body format is defined in `format/` and `academy/07-templates/4-issue-template.md`.
+
+---
+
 # Sprint Naming Convention
 
 Sprint files should follow:
