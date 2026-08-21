@@ -1,9 +1,9 @@
-# Phase 01 - Core Platform
+# Phase 00 - Foundation
 
-**Phase:** Phase 01  
-**Duration:** 6-8 Weeks  
+**Phase:** Phase 00  
+**Duration:** 3-5 Weeks  
 **Status:** Planned  
-**Release Range:** v0.3.0 - v0.4.0
+**Release Range:** v0.1.0 - v0.2.0
 
 ---
 
@@ -11,86 +11,65 @@
 
 ## Purpose
 
-Build the reusable platform capabilities that every ERP business module depends on: knowing who the user is, what they are allowed to do, who they represent in the organization, and where they sit within it.
+Establish the engineering and technical foundation required to build the ERP platform.
 
-Phase 00 produced a running application with no business meaning. Phase 01 gives it identity and structure.
+This phase prepares the learner to operate like a professional software engineer by introducing:
 
-The focus is understanding how enterprise platforms separate shared capability from business features:
+- Software development lifecycle practices.
+- GitHub-based engineering workflow.
+- Agile delivery process.
+- Full-stack application architecture.
+- Development environment setup.
+- Documentation standards.
 
-```text
-Application Foundation
-
-        ↓
-
-Identity and Security
-
-        ↓
-
-Organizational Structure
-
-        ↓
-
-Reusable Platform
-```
-
-No ERP business module can be built correctly before these capabilities exist.
+The objective is to create a strong foundation before implementing ERP business capabilities.
 
 ---
 
 # Business Outcome
 
-After completing this phase, the ERP platform will support:
+After completing this phase, the ERP project will have:
 
-- User registration and secure authentication.
-- Role-based access control.
-- Permission-driven authorization.
-- Company and department structure.
-- Position and employee records.
-- Employee-to-user relationships.
-- Organizational reporting hierarchy.
+- A professionally structured repository.
+- Defined engineering processes.
+- A working full-stack application foundation.
+- A documented architecture approach.
+- Automated development validation.
+- A repeatable delivery workflow.
 
-The system evolves from:
+The project moves from:
 
-```text
+```
+Idea
+
+↓
+
+Organized Software Project
+
+↓
+
 Working Application Foundation
-
-        ↓
-
-Secure Enterprise Platform
 ```
 
 ---
 
 # Phase Context
 
-This phase builds on the technical foundation created in Phase 00.
+This is the first phase of the ERP Bootcamp roadmap.
 
 ```text
 Phase 00
 Foundation
-
-Repository
-Engineering Process
-Application Setup
 
         ↓
 
 Phase 01
 Core Platform
 
-Identity
-Security
-Organization
-
         ↓
 
 Phase 02
 ERP Business Modules
-
-HR
-Inventory
-Sales
-Purchasing
 ```
 
 ---
@@ -99,467 +78,511 @@ Purchasing
 
 By the end of this phase, the learner should be able to:
 
-- [ ] Implement secure authentication.
-- [ ] Design role and permission models.
-- [ ] Protect API resources by permission.
-- [ ] Build protected frontend routes.
-- [ ] Model organizational structures.
-- [ ] Design hierarchical data relationships.
-- [ ] Link identity records to business records.
-- [ ] Test security behaviour, including denial cases.
+- [ ] Understand professional software development workflow.
+- [ ] Manage work using GitHub.
+- [ ] Follow Agile Scrum practices.
+- [ ] Create technical documentation.
+- [ ] Build a full-stack application foundation.
+- [ ] Understand frontend, backend, and database architecture.
+- [ ] Configure development tooling.
+- [ ] Create basic CI validation.
 
 ---
 
 # Business Capabilities Delivered
 
+This phase does not deliver ERP business functionality.
+
+Instead, it delivers the foundation required to support future ERP capabilities.
+
 ---
 
-# Identity & Access Management
+## Engineering Platform Capability
 
 Provides:
 
-- User registration and login.
-- Password security.
-- JWT-based session handling.
-- Role management.
-- Permission management.
-- Protected API and UI resources.
+- Repository management.
+- Development workflow.
+- Documentation standards.
+- Collaboration process.
 
 ---
 
-# Organization & Employee Management
+## Application Foundation Capability
 
 Provides:
 
-- Company profile management.
-- Department structure.
-- Position management.
-- Employee records.
-- Employee-to-user linkage.
-- Organizational reporting hierarchy.
-
----
-
-# Business Domains Covered
-
-| Domain | Description |
-|--------|-------------|
-| Security | Authentication and access control |
-| Administration | User, role, and permission management |
-| Organization | Company, department, and position structure |
-| HR Foundation | Employee master data and hierarchy |
+- Frontend application.
+- Backend API.
+- Database connection.
+- Development environment.
 
 ---
 
 # Technical Scope
 
-## Frontend
+---
 
-- Login and registration pages.
-- Protected route handling.
-- Session and token management.
-- Role-aware navigation.
-- Company, department, and employee management screens.
-- Organization tree visualization.
+# Frontend
+
+Technologies:
+
+```
+React
+
++
+
+Next.js
+
++
+
+TypeScript
+```
+
+Implemented:
+
+- Application structure.
+- Component organization.
+- Environment configuration.
+- API communication foundation.
 
 ---
 
-## Backend
+# Backend
 
-- Authentication endpoints.
-- Password hashing.
-- JWT issuance and validation.
-- Authorization guards.
-- Role and permission services.
-- Company, department, position, and employee modules.
+Technologies:
+
+```
+Node.js
+
++
+
+NestJS
+
++
+
+TypeScript
+```
+
+Implemented:
+
+- API structure.
+- Module organization.
+- Service architecture.
+- Configuration management.
 
 ---
 
-## Database
+# Database
 
-- User, Role, and Permission entities.
-- Company, Department, Position, and Employee entities.
-- Many-to-many role and permission relationships.
-- Self-referencing hierarchy for departments and reporting lines.
-- Migrations for each entity set.
+Technology:
+
+```
+PostgreSQL
+```
+
+Implemented:
+
+- Database connection.
+- ORM configuration.
+- Migration workflow.
 
 ---
 
-## DevOps
+# DevOps
 
-- CI validation extended to cover the new modules.
-- Environment configuration for JWT secrets.
-- Seed data for roles and permissions.
+Implemented:
+
+- Docker development environment.
+- GitHub Actions CI pipeline.
+- Environment configuration.
 
 ---
 
 # Architecture Impact
 
-This phase introduces the first cross-cutting services in the system.
+This phase establishes the initial ERP architecture.
 
 ```text
-                        ERP Platform
+                    User
 
-                             │
+                      |
 
-        ┌────────────────────┼────────────────────┐
+                      |
 
-  Authentication      Authorization         Organization
-     Service             Service              Service
+                 Frontend
 
-        │                    │                    │
+              Next.js + React
 
-        └────────────────────┼────────────────────┘
+                      |
 
-                        PostgreSQL
+                      |
+
+                  REST API
+
+                      |
+
+                      |
+
+                 Backend
+
+             Node.js + NestJS
+
+                      |
+
+                      |
+
+                 Database
+
+                PostgreSQL
 ```
-
-Key consequence:
-
-Every module built after this phase must go through the authorization layer. No module implements its own access control.
 
 ---
 
 # Sprint Breakdown
 
-This phase is executed through two sprints.
+This phase consists of:
 
 | Sprint | Objective | Release |
-|--------|-----------|---------|
-| Sprint 02 | Identity & Access Management | v0.3.0 |
-| Sprint 03 | Organization & Employee Management | v0.4.0 |
+|---|---|---|
+| Sprint 00 | Project Foundation & Engineering Setup | v0.1.0 |
+| Sprint 01 | Application Foundation & Full-Stack Environment Setup | v0.2.0 |
 
 ---
 
-# Sprint 02 Summary
+# Sprint 00 Summary
 
-**Identity & Access Management**
+## Project Foundation & Engineering Setup
 
-Delivers:
+Objective:
 
-- User authentication API.
-- User management.
-- Role management.
-- Permission system.
-- Authentication UI and protected routes.
-- Security testing.
+> Establish professional engineering workflow before application development begins.
 
-Issues: 010 - 015
+Delivered:
 
----
-
-# Sprint 03 Summary
-
-**Organization & Employee Management**
-
-Delivers:
-
-- Company management.
-- Department management with hierarchy.
-- Position management.
-- Employee management.
-- User-to-employee linkage.
-- Organization tree.
-
-Issues: 016 - 021
+- Repository structure.
+- Git workflow.
+- GitHub workflow.
+- Documentation framework.
+- Agile process.
 
 ---
 
-# Sprint Dependencies
+# Sprint 01 Summary
 
-```text
-Sprint 01
-Application Foundation
+## Application Foundation & Full-Stack Environment Setup
 
-        ↓
+Objective:
 
-Sprint 02
-Identity & Access Management
+> Create the technical foundation required for future ERP development.
 
-        ↓
+Delivered:
 
-Sprint 03
-Organization & Employee Management
-
-        ↓
-
-Phase 02
-ERP Business Modules
-```
-
-Notes:
-
-- Sprint 02 requires the database and API foundation from Sprint 01.
-- Sprint 03 requires users from Sprint 02 in order to link employees to accounts.
-- Phase 02 cannot begin until both are complete, because every business module depends on permissions and employee records.
-
----
-
-# Business Process Flow
-
-```text
-User Registered
-
-        ↓
-
-Role Assigned
-
-        ↓
-
-Permissions Resolved
-
-        ↓
-
-User Logs In
-
-        ↓
-
-Linked to Employee Record
-
-        ↓
-
-Employee Belongs to Department and Position
-
-        ↓
-
-Reporting Hierarchy Established
-
-        ↓
-
-Foundation Ready for Business Modules
-```
+- Frontend application.
+- Backend API.
+- Database connectivity.
+- Docker environment.
+- CI pipeline.
 
 ---
 
 # GitHub Execution Model
 
-All phase work must follow:
+All work follows:
 
 ```text
-Phase Objective
+Phase Goal
 
-        ↓
+↓
 
 Sprint
 
-        ↓
+↓
 
 Epic
 
-        ↓
+↓
 
 GitHub Issues
 
-        ↓
+↓
 
 Feature Branch
 
-        ↓
+↓
 
 Pull Request
 
-        ↓
+↓
 
 Code Review
 
-        ↓
+↓
 
 Merge
 
-        ↓
+↓
 
 Release
 ```
 
 ---
 
-# GitHub Epics Created
+# GitHub Artifacts Created
 
-```text
-Epic: Identity & Access Management
+## Repository
 
-Epic: Organization & Employee Management
+Created:
+
+```
+fullstack-roadmap-erp-bootcamp
+```
+
+---
+
+## Issues
+
+Examples:
+
+- Repository setup.
+- Application initialization.
+- CI configuration.
+- Documentation tasks.
+
+---
+
+## Pull Requests
+
+Requirements:
+
+- Linked issue.
+- Description.
+- Testing evidence.
+- Review approval.
+
+---
+
+## Releases
+
+Created releases:
+
+```
+v0.1.0
+
+Project Foundation
+```
+
+and
+
+```
+v0.2.0
+
+Application Foundation
 ```
 
 ---
 
 # Documentation Produced
 
-## Business Documents
+This phase creates:
 
-- [ ] Security and access BRD.
-- [ ] Role and permission matrix.
-- [ ] Organizational structure definition.
+## Program Documentation
+
+- Roadmap
+- Expectations
+- Graduation Requirements
 
 ---
 
-## Technical Documents
+## Engineering Documentation
 
-- [ ] Updated SRS.
-- [ ] Updated Architecture Documentation.
-- [ ] Updated ERD.
-- [ ] Authentication and organization API documentation.
-- [ ] ADR: authentication strategy.
-- [ ] ADR: role and permission model.
+- Git workflow
+- SDLC
+- Agile Scrum
+- Branching strategy
+- Pull Request process
+- Code review guidelines
+
+---
+
+## Technical Documentation
+
+- Architecture overview
+- Development setup
+- Environment configuration
 
 ---
 
 # Testing Strategy
 
-## Unit Testing
+Testing focus:
 
-Validate:
+## Documentation Validation
 
-- Password hashing and verification.
-- Token generation and expiry.
-- Permission resolution.
-- Hierarchy traversal.
-- Employee and user linkage rules.
+Verify:
 
----
-
-## Integration Testing
-
-Validate:
-
-- Login and registration endpoints.
-- Protected endpoint access with and without permission.
-- Role assignment.
-- Company, department, position, and employee APIs.
+- Documentation completeness.
+- Markdown formatting.
+- Link accuracy.
 
 ---
 
-## End-to-End Testing
+## Application Validation
 
-Validate:
+Verify:
 
-- Register, log in, and reach a protected page.
-- Access denied without the required permission.
-- Create a department, assign an employee, and view the organization tree.
+- Frontend starts.
+- Backend starts.
+- Database connects.
+- API responds.
+
+---
+
+## CI Validation
+
+Verify:
+
+```
+Commit
+
+↓
+
+Build
+
+↓
+
+Lint
+
+↓
+
+Test
+```
 
 ---
 
 # Quality Goals
 
-| Area | Target |
-|------|--------|
-| Security | Passwords hashed; no credentials in logs or responses |
-| Authorization | Every protected endpoint enforces a permission server-side |
-| Data Integrity | Employees cannot be orphaned from the organization |
-| Reusability | Business modules consume the platform, never reimplement it |
-| Documentation | Role and permission matrix kept current |
+| Area | Goal |
+|---|---|
+| Code Quality | Establish professional standards |
+| Documentation | Maintain clear engineering knowledge |
+| Collaboration | Use GitHub workflow correctly |
+| Architecture | Create scalable foundation |
+| Automation | Reduce manual validation |
 
 ---
 
 # Risks
 
 | Risk | Impact | Mitigation |
-|------|--------|------------|
-| Weak authentication design | High | Follow the ADR; hardened further in Sprint 11 |
-| Permission model too rigid | Medium | Model permissions as data, not code |
-| Hierarchy modelling errors | Medium | Design the self-referencing relationship before implementing |
-| Business logic leaking into controllers | Medium | Enforce the service layer in code review |
+|---|---|---|
+| Weak understanding of Git | High | Daily Git practice |
+| Poor documentation habits | Medium | Documentation required per sprint |
+| Architecture shortcuts | High | Review design decisions |
 
 ---
 
 # Success Criteria
 
-This phase is considered complete when:
+Phase 00 is complete when:
 
-- [ ] Both sprint objectives completed.
-- [ ] Authentication and authorization working end to end.
-- [ ] Role and permission model implemented.
-- [ ] Company, department, position, and employee modules complete.
-- [ ] Users linked to employee records.
-- [ ] Organization hierarchy displayed.
-- [ ] Documentation completed.
-- [ ] Automated tests passing, including denial cases.
-- [ ] Releases v0.3.0 and v0.4.0 published.
-- [ ] Retrospectives completed.
+- [ ] Repository structure exists.
+- [ ] Git workflow is followed.
+- [ ] GitHub Issues and PRs are used.
+- [ ] Frontend application runs.
+- [ ] Backend application runs.
+- [ ] Database is connected.
+- [ ] Docker environment works.
+- [ ] CI pipeline passes.
+- [ ] Documentation is complete.
+- [ ] Releases v0.1.0 and v0.2.0 are published.
 
 ---
 
 # Skills Developed
 
-## Business Analysis
+## Software Engineering
 
-- Access control requirements.
-- Organizational structure modelling.
-- Role and responsibility mapping.
+The learner understands:
 
----
-
-## Backend Engineering
-
-- Authentication implementation.
-- Authorization guards and permission resolution.
-- Hierarchical data modelling.
-- Service layer design.
+- SDLC.
+- Agile development.
+- Git workflow.
+- Code collaboration.
 
 ---
 
-## Frontend Engineering
+## Full-Stack Development
 
-- Protected routing.
-- Session handling.
-- Role-aware interfaces.
-- Tree visualization.
+The learner understands:
+
+- Frontend architecture.
+- Backend architecture.
+- Database integration.
 
 ---
 
-## Architecture
+## Professional Practices
 
-- Separating platform capability from business features.
-- Designing for reuse across future modules.
+The learner practices:
+
+- Documentation.
+- Pull Requests.
+- Code Reviews.
+- Continuous improvement.
 
 ---
 
 # Lessons Learned
 
-Document after completion:
+(To be completed after phase completion)
 
-- Authentication and session decisions and their consequences.
-- Permission model flexibility in practice.
-- Hierarchy modelling difficulties.
-- What later modules will need that was not anticipated.
+Document:
+
+- Engineering decisions.
+- Challenges encountered.
+- Improvements identified.
 
 ---
 
 # Next Phase Preview
 
-# Phase 02 - ERP Business Modules
+# Phase 01 - Core Platform
 
 Objective:
 
-> Implement the core ERP business capabilities used by enterprise organizations.
+> Build reusable ERP platform capabilities required by all business modules.
 
-Expected focus:
+Focus:
 
-- Human Resource Management.
-- Inventory Management.
-- Sales Management.
-- Purchasing Management.
+- Authentication.
+- Authorization.
+- User management.
+- Organization structure.
+- Security foundation.
 
 ---
 
 # Final Principle
 
-A platform is what business modules stand on.
+Phase 00 establishes the foundation of the ERP platform.
 
-```text
-Business Value
+A strong enterprise system is not created by writing features quickly.
 
-+
+It is created by establishing:
 
-Secure Access
-
-+
-
-Organizational Context
-
-+
-
-Reusable Capability
 ```
+Good Process
 
-Every shortcut taken in this phase is paid for in every module that follows it.
++
+
+Good Architecture
+
++
+
+Good Engineering Practices
+
++
+
+Continuous Improvement
+```
