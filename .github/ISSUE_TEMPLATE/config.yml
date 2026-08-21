@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Contributing Guide
+    url: https://github.com/devosphere/fullstack-roadmap-erp-bootcamp/blob/development/CONTRIBUTING.md
+    about: Branching, commit, and Pull Request rules for this project.
+  - name: Sprint Documentation
+    url: https://github.com/devosphere/fullstack-roadmap-erp-bootcamp/tree/development/academy/08-sprints
+    about: Sprint goals, scope, and acceptance criteria.
