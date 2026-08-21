@@ -31,7 +31,7 @@ fullstack-roadmap-erp-bootcamp/
 ├── backend/
 ├── database/
 ├── infrastructure/   # Docker, Compose, deployment configs
-├── tests/  
+├── tests/
 ├── scripts/          # Helper scripts
 ├── .github/
 ├── README.md
