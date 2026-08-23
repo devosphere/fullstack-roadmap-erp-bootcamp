@@ -1,11 +1,6 @@
 # [DOCS] Create Engineering Documentation
 
-<!-- GitHub title: [DOCS] Create Engineering Documentation
-     Labels: documentation, docs, priority: high
-     Milestone: Sprint 00 - Project Foundation
-     Branch: docs/004-create-engineering-documentation
-     Epic: Project Foundation & Engineering Setup
-     Copy everything below this comment into the issue body. -->
+
 
 ## Issue Type:
 
@@ -23,9 +18,12 @@
 - [ ] Critical
 
 ## Module: docs
+
 ## Sprint: Sprint 00 - Project Foundation & Engineering Setup
 
 ---
+
+
 
 ## Summary
 
@@ -64,6 +62,8 @@ Then they can write code that matches the existing codebase conventions without 
 - [ ] All examples verified against this project
 - [ ] Links resolve correctly and documents render correctly on GitHub
 
+
+
 ## Expected Result
 
 `academy/` contains a complete engineering handbook. Every convention a later sprint relies on
@@ -72,7 +72,11 @@ each sprint document.
 
 ---
 
+
+
 ## Scope
+
+
 
 ### Included
 
@@ -83,11 +87,15 @@ each sprint document.
 - `academy/07-templates/` — BRD, SRS, ADR, issue, PR, release, retrospective templates
 - `academy/README.md` — index and reading order
 
+
+
 ### Out of Scope
 
 - Sprint documents (`academy/08-sprints/` — authored separately as roadmap planning)
 - System design and DevOps guides (expanded in later phases)
 - Any application code
+
+
 
 ## Technical Requirements
 
@@ -147,6 +155,8 @@ Code and its documentation change in the same Pull Request.
 - Issue 001 — the `academy/` folder structure must exist.
 - Issue 002 — git and PR documents are authored there; this issue completes the surrounding set.
 
+
+
 ## Definition of Done
 
 - [ ] Acceptance criteria met
@@ -158,11 +168,16 @@ Code and its documentation change in the same Pull Request.
 - [ ] CI green
 - [ ] Pull Request squash-merged into `development`
 
+
+
 ## Related Links
 
-| Artifact | Reference |
-|----------|-----------|
-| Sprint spec | `academy/08-sprints/phase-00-foundation/sprint-00-project-foundation.md` § 2, § 6, § 7 |
-| Academy index | `academy/README.md` |
-| Epic | Project Foundation & Engineering Setup |
-| Pull Request | _to be linked_ |
+
+| Artifact      | Reference                                                                              |
+| ------------- | -------------------------------------------------------------------------------------- |
+| Sprint spec   | `academy/08-sprints/phase-00-foundation/sprint-00-project-foundation.md` § 2, § 6, § 7 |
+| Academy index | `academy/README.md`                                                                    |
+| Epic          | Project Foundation & Engineering Setup                                                 |
+| Pull Request  | *to be linked*                                                                         |
+
+
