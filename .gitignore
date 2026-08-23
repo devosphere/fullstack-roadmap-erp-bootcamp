@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs and caches
+dist/
+build/
+coverage/
+.cache/
+.turbo/
+.next/
+out/
+*.tsbuildinfo
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Runtime and temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.pid
+*.seed
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor and local tooling
+.vscode/
+.idea/
+.cursor/
+.claude/
+
+# Next.js generated file
+next-env.d.ts
