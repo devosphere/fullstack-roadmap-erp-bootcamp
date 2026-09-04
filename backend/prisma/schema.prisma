@@ -7,9 +7,2335 @@ datasource db {
   provider = "postgresql"
 }
 
-model user {
-  id   String @id @default(uuid())
-  name String
+// Generic lifecycle flag for master data. Master data is never hard-deleted —
+// rows stay referenceable by historical documents and are retired instead.
+enum org_status {
+  ACTIVE
+  INACTIVE
 }
 
+// Kept separate from org_status: a user's state is expected to grow security
+// cases (lockout, suspension) that don't apply to master data.
+enum user_status {
+  ACTIVE
+  INACTIVE
+}
 
+// Tenant root. A company's id is the tenant id carried by every business table.
+model company {
+  id            String     @id @default(uuid())
+  company_code  String     @unique
+  name          String
+  legal_name    String?
+  tax_number    String?
+  email         String?
+  phone         String?
+  address_line1 String?
+  address_line2 String?
+  city          String?
+  country       String?
+  status        org_status @default(ACTIVE)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  users                      user[]
+  departments                department[]
+  positions                  position[]
+  employees                  employee[]
+  attendances                attendance[]
+  holidays                   holiday[]
+  leave_types                leave_type[]
+  leave_requests             leave_request[]
+  leave_balances             leave_balance[]
+  leave_balance_transactions leave_balance_transaction[]
+  employment_histories       employment_history[]
+  emergency_contacts         emergency_contact[]
+  employee_identifiers       employee_identifier[]
+  employee_documents         employee_document[]
+  product_categories         product_category[]
+  products                   product[]
+  warehouses                 warehouse[]
+  inventories                inventory[]
+  stock_movements            stock_movement[]
+  inventory_adjustments      inventory_adjustment[]
+  customers                  customer[]
+  price_lists                price_list[]
+  sales_quotations           sales_quotation[]
+  sales_orders               sales_order[]
+  deliveries                 delivery[]
+  sales_invoices             sales_invoice[]
+  suppliers                  supplier[]
+  supplier_bank_details      supplier_bank_detail[]
+  supplier_products          supplier_product[]
+  purchase_requisitions      purchase_requisition[]
+  approval_limits            approval_limit[]
+  requisition_approvals      requisition_approval[]
+  purchase_orders            purchase_order[]
+  goods_receipts             goods_receipt[]
+  supplier_invoices          supplier_invoice[]
+  invoice_match_tolerance    invoice_match_tolerance?
+  accounts                   account[]
+  fiscal_periods             fiscal_period[]
+  journal_entries            journal_entry[]
+  receivables                receivable[]
+  payables                   payable[]
+  payments                   payment[]
+  payment_applications       payment_application[]
+  report_definitions         report_definition[]
+  report_executions          report_execution[]
+  report_exports             report_export[]
+  report_schedules           report_schedule[]
+  report_schedule_runs       report_schedule_run[]
+  kpi_definitions            kpi_definition[]
+  workflow_definitions       workflow_definition[]
+  workflow_instances         workflow_instance[]
+  workflow_tasks             workflow_task[]
+  workflow_audit_logs        workflow_audit_log[]
+  delegations                delegation[]
+  notifications              notification[]
+  security_audit_logs        security_audit_log[]
+  document_sequences         document_sequence[]
+  account_mappings           account_mapping[]
+}
+
+model user {
+  id            String      @id @default(uuid())
+  company_id    String
+  email         String      @unique
+  password_hash String
+  first_name    String
+  last_name     String
+  status        user_status @default(ACTIVE)
+  last_login_at DateTime?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+
+  company                  company                     @relation(fields: [company_id], references: [id])
+  roles                    user_role[]
+  departments_headed       department[]                @relation("department_head")
+  employee                 employee?
+  attendance_corrections   attendance[]                @relation("attendance_corrector")
+  leave_transactions       leave_balance_transaction[] @relation("leave_transaction_creator")
+  employment_changes       employment_history[]        @relation("employment_history_author")
+  documents_uploaded       employee_document[]         @relation("employee_document_uploader")
+  warehouses_managed       warehouse[]                 @relation("warehouse_manager")
+  stock_movements          stock_movement[]            @relation("stock_movement_actor")
+  adjustments_created      inventory_adjustment[]      @relation("adjustment_creator")
+  adjustments_approved     inventory_adjustment[]      @relation("adjustment_approver")
+  price_lists_created      price_list[]                @relation("price_list_creator")
+  quotations_created       sales_quotation[]           @relation("quotation_creator")
+  orders_created           sales_order[]               @relation("order_creator")
+  orders_confirmed         sales_order[]               @relation("order_confirmer")
+  deliveries_shipped       delivery[]                  @relation("delivery_shipper")
+  invoices_issued          sales_invoice[]             @relation("invoice_issuer")
+  bank_details_updated     supplier_bank_detail[]      @relation("bank_detail_editor")
+  approval_limits_set      approval_limit[]            @relation("approval_limit_editor")
+  purchase_orders_created  purchase_order[]            @relation("po_creator")
+  purchase_orders_issued   purchase_order[]            @relation("po_issuer")
+  goods_receipts_taken     goods_receipt[]             @relation("receipt_receiver")
+  match_overrides          supplier_invoice[]          @relation("invoice_match_overrider")
+  tolerances_updated       invoice_match_tolerance[]   @relation("tolerance_editor")
+  fiscal_periods_closed    fiscal_period[]             @relation("period_closer")
+  journal_entries_posted   journal_entry[]             @relation("entry_poster")
+  payments_created         payment[]                   @relation("payment_creator")
+  reports_executed         report_execution[]          @relation("report_executor")
+  reports_exported         report_export[]             @relation("report_exporter")
+  report_schedules_created report_schedule[]           @relation("schedule_creator")
+  report_subscriptions     report_schedule_recipient[]
+  workflows_authored       workflow_definition[]       @relation("workflow_author")
+  workflows_started        workflow_instance[]         @relation("workflow_starter")
+  tasks_assigned           workflow_task[]             @relation("task_assignee")
+  tasks_delegated_out      workflow_task[]             @relation("task_delegator")
+  workflow_actions         workflow_audit_log[]        @relation("workflow_actor")
+  delegations_given        delegation[]                @relation("delegator")
+  delegations_received     delegation[]                @relation("delegate")
+  notifications            notification[]              @relation("notification_recipient")
+  security_audit_events    security_audit_log[]        @relation("audit_actor")
+  refresh_tokens           refresh_token[]
+  mfa_settings             user_mfa_setting[]
+  password_reset_tokens    password_reset_token[]
+  account_mappings_updated account_mapping[]           @relation("account_mapping_editor")
+
+  @@index([company_id])
+}
+
+model department {
+  id              String     @id @default(uuid())
+  company_id      String
+  department_code String
+  name            String
+  description     String?
+  head_user_id    String?
+  status          org_status @default(ACTIVE)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+
+  company               company                @relation(fields: [company_id], references: [id])
+  head_user             user?                  @relation("department_head", fields: [head_user_id], references: [id])
+  employees             employee[]
+  purchase_requisitions purchase_requisition[]
+
+  // Leading company_id also serves tenant-scoped lookups, so no separate index.
+  @@unique([company_id, department_code])
+}
+
+// Company-wide job catalog. An employee's department is recorded on the
+// employee, not here, so one title can be held across several departments.
+model position {
+  id            String     @id @default(uuid())
+  company_id    String
+  position_code String
+  title         String
+  description   String?
+  status        org_status @default(ACTIVE)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  company   company    @relation(fields: [company_id], references: [id])
+  employees employee[]
+
+  @@unique([company_id, position_code])
+}
+
+// Describes the employment contract, not the current state — an employee can be
+// FULL_TIME (type) while PROBATION (status). Probation is a status, not a type.
+enum employment_type {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERN
+}
+
+enum employment_status {
+  PROBATION
+  REGULAR
+  CONTRACTUAL
+  ON_LEAVE
+  SUSPENDED
+  RESIGNED
+  TERMINATED
+}
+
+// The person employed by the company. Distinct from `user`, which is the login:
+// an employee is never deleted (payroll and attendance history reference them),
+// while their login can be deactivated the day they leave.
+model employee {
+  id              String            @id @default(uuid())
+  company_id      String
+  employee_number String
+  user_id         String            @unique
+  department_id   String
+  position_id     String
+  manager_id      String?
+  first_name      String
+  last_name       String
+  hire_date       DateTime          @db.Date
+  end_date        DateTime?         @db.Date
+  employment_type employment_type
+  status          employment_status @default(PROBATION)
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+
+  company    company    @relation(fields: [company_id], references: [id])
+  user       user       @relation(fields: [user_id], references: [id])
+  department department @relation(fields: [department_id], references: [id])
+  position   position   @relation(fields: [position_id], references: [id])
+  manager    employee?  @relation("employee_hierarchy", fields: [manager_id], references: [id])
+  reports    employee[] @relation("employee_hierarchy")
+
+  attendances           attendance[]
+  leave_requests        leave_request[]        @relation("leave_requester")
+  leave_approvals       leave_request[]        @relation("leave_approver")
+  leave_balances        leave_balance[]
+  employment_history    employment_history[]
+  emergency_contacts    emergency_contact[]
+  identifiers           employee_identifier[]
+  documents             employee_document[]
+  requisitions          purchase_requisition[] @relation("requisition_requester")
+  requisition_approvals requisition_approval[] @relation("requisition_approver")
+
+  @@unique([company_id, employee_number])
+  @@index([department_id])
+  @@index([manager_id])
+}
+
+// Append-only log of employment status changes. from_status is null on the
+// first row, which records the hire itself.
+model employment_history {
+  id             String             @id @default(uuid())
+  company_id     String
+  employee_id    String
+  from_status    employment_status?
+  to_status      employment_status
+  effective_date DateTime           @db.Date
+  reason         String?
+  changed_by     String
+  created_at     DateTime           @default(now())
+
+  company         company  @relation(fields: [company_id], references: [id])
+  employee        employee @relation(fields: [employee_id], references: [id])
+  changed_by_user user     @relation("employment_history_author", fields: [changed_by], references: [id])
+
+  @@index([employee_id, effective_date])
+}
+
+model emergency_contact {
+  id           String   @id @default(uuid())
+  company_id   String
+  employee_id  String
+  name         String
+  relationship String
+  phone        String
+  address      String?
+  is_primary   Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  company  company  @relation(fields: [company_id], references: [id])
+  employee employee @relation(fields: [employee_id], references: [id])
+
+  @@index([employee_id])
+}
+
+enum identifier_type {
+  TAX
+  SOCIAL_SECURITY
+  NATIONAL_ID
+  PASSPORT
+  DRIVER_LICENSE
+  VOTER_ID
+}
+
+model employee_identifier {
+  id               String          @id @default(uuid())
+  company_id       String
+  employee_id      String
+  identifier_type  identifier_type
+  identifier_value String
+  issued_date      DateTime?       @db.Date
+  expiry_date      DateTime?       @db.Date
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+
+  company  company  @relation(fields: [company_id], references: [id])
+  employee employee @relation(fields: [employee_id], references: [id])
+
+  // Deliberately not unique on (employee_id, identifier_type): dual citizens
+  // hold two passports. Enforce single-value rules per type in the service.
+  @@index([employee_id])
+}
+
+model employee_document {
+  id            String   @id @default(uuid())
+  company_id    String
+  employee_id   String
+  document_type String
+  file_name     String
+  file_path     String
+  uploaded_by   String
+  uploaded_at   DateTime @default(now())
+
+  company          company  @relation(fields: [company_id], references: [id])
+  employee         employee @relation(fields: [employee_id], references: [id])
+  uploaded_by_user user     @relation("employee_document_uploader", fields: [uploaded_by], references: [id])
+
+  @@index([employee_id])
+}
+
+enum attendance_status {
+  PRESENT
+  INCOMPLETE
+  LATE
+  EARLY_DEPARTURE
+  ABSENT
+  ON_LEAVE
+}
+
+model attendance {
+  id              String            @id @default(uuid())
+  company_id      String
+  employee_id     String
+  attendance_date DateTime          @db.Date
+  clock_in_at     DateTime?
+  clock_out_at    DateTime?
+  worked_minutes  Int?
+  status          attendance_status
+  notes           String?
+
+  // Preserved originals so a manager's correction is never a silent edit —
+  // clock times feed payroll.
+  original_clock_in_at  DateTime?
+  original_clock_out_at DateTime?
+  corrected_by          String?
+  corrected_at          DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  company           company  @relation(fields: [company_id], references: [id])
+  employee          employee @relation(fields: [employee_id], references: [id])
+  corrected_by_user user?    @relation("attendance_corrector", fields: [corrected_by], references: [id])
+
+  // One row per employee per day makes a double clock-in impossible.
+  @@unique([employee_id, attendance_date])
+  @@index([company_id, attendance_date])
+}
+
+// Dates excluded from leave working-day counts (issue-025). company-scoped
+// because two companies in different countries observe different holidays.
+// No pay-rate fields: payroll is out of scope across the whole project.
+model holiday {
+  id           String   @id @default(uuid())
+  company_id   String
+  holiday_date DateTime @db.Date
+  name         String
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  company company @relation(fields: [company_id], references: [id])
+
+  @@unique([company_id, holiday_date])
+}
+
+model leave_type {
+  id                   String     @id @default(uuid())
+  company_id           String
+  code                 String
+  name                 String
+  is_paid              Boolean    @default(true)
+  requires_document    Boolean    @default(false)
+  max_consecutive_days Int?
+  allows_backdating    Boolean    @default(false)
+  status               org_status @default(ACTIVE)
+  created_at           DateTime   @default(now())
+  updated_at           DateTime   @updatedAt
+
+  company        company         @relation(fields: [company_id], references: [id])
+  leave_requests leave_request[]
+  leave_balances leave_balance[]
+
+  @@unique([company_id, code])
+}
+
+enum leave_request_status {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model leave_request {
+  id               String               @id @default(uuid())
+  company_id       String
+  request_number   String
+  employee_id      String
+  leave_type_id    String
+  start_date       DateTime             @db.Date
+  end_date         DateTime             @db.Date
+  requested_days   Decimal              @db.Decimal(5, 2)
+  reason           String?
+  status           leave_request_status @default(PENDING)
+  approver_id      String?
+  decided_at       DateTime?
+  decision_comment String?
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+
+  company    company    @relation(fields: [company_id], references: [id])
+  employee   employee   @relation("leave_requester", fields: [employee_id], references: [id])
+  leave_type leave_type @relation(fields: [leave_type_id], references: [id])
+  approver   employee?  @relation("leave_approver", fields: [approver_id], references: [id])
+
+  @@unique([company_id, request_number])
+  @@index([employee_id, status])
+  @@index([approver_id, status])
+}
+
+// Current position of the balance. remaining is derived, not stored:
+// allocated + carried_over - used.
+model leave_balance {
+  id                String   @id @default(uuid())
+  company_id        String
+  employee_id       String
+  leave_type_id     String
+  leave_year        Int
+  allocated_days    Decimal  @default(0) @db.Decimal(5, 2)
+  used_days         Decimal  @default(0) @db.Decimal(5, 2)
+  carried_over_days Decimal  @default(0) @db.Decimal(5, 2)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  company      company                     @relation(fields: [company_id], references: [id])
+  employee     employee                    @relation(fields: [employee_id], references: [id])
+  leave_type   leave_type                  @relation(fields: [leave_type_id], references: [id])
+  transactions leave_balance_transaction[]
+
+  @@unique([employee_id, leave_type_id, leave_year])
+}
+
+enum leave_transaction_type {
+  ALLOCATION
+  DEDUCTION
+  RESTORATION
+  ADJUSTMENT
+  CARRY_OVER
+}
+
+// Append-only: rows are never updated or deleted, so there is no updated_at.
+// The counters on leave_balance must always equal the sum of these rows.
+model leave_balance_transaction {
+  id               String                 @id @default(uuid())
+  company_id       String
+  leave_balance_id String
+  transaction_type leave_transaction_type
+  days             Decimal                @db.Decimal(5, 2)
+  reason           String?
+  source_type      String?
+  source_id        String?
+  created_by       String
+  created_at       DateTime               @default(now())
+
+  company         company       @relation(fields: [company_id], references: [id])
+  leave_balance   leave_balance @relation(fields: [leave_balance_id], references: [id])
+  created_by_user user          @relation("leave_transaction_creator", fields: [created_by], references: [id])
+
+  @@index([leave_balance_id, created_at])
+}
+
+model role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+
+  users           user_role[]
+  permissions     role_permission[]
+  approval_limits approval_limit[]
+}
+
+model permission {
+  id   String @id @default(uuid())
+  code String @unique
+
+  roles role_permission[]
+}
+
+model role_permission {
+  role_id       String
+  permission_id String
+
+  role       role       @relation(fields: [role_id], references: [id])
+  permission permission @relation(fields: [permission_id], references: [id])
+
+  @@id([role_id, permission_id])
+}
+
+model user_role {
+  user_id String
+  role_id String
+
+  user user @relation(fields: [user_id], references: [id])
+  role role @relation(fields: [role_id], references: [id])
+
+  @@id([user_id, role_id])
+}
+
+// =============================================================================
+// Inventory Management (Sprint 05)
+// =============================================================================
+
+model product_category {
+  id            String     @id @default(uuid())
+  company_id    String
+  category_code String
+  name          String
+  description   String?
+  status        org_status @default(ACTIVE)
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  company  company   @relation(fields: [company_id], references: [id])
+  products product[]
+
+  @@unique([company_id, category_code])
+}
+
+enum unit_of_measure {
+  PIECE
+  BOX
+  CARTON
+  KILOGRAM
+  GRAM
+  LITER
+  METER
+  PACK
+}
+
+model product {
+  id               String          @id @default(uuid())
+  company_id       String
+  product_code     String
+  name             String
+  description      String?
+  category_id      String
+  unit_of_measure  unit_of_measure
+  barcode          String?
+  reorder_level    Decimal         @default(0) @db.Decimal(12, 3)
+  reorder_quantity Decimal         @default(0) @db.Decimal(12, 3)
+  status           org_status      @default(ACTIVE)
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+
+  company  company          @relation(fields: [company_id], references: [id])
+  category product_category @relation(fields: [category_id], references: [id])
+
+  inventories            inventory[]
+  stock_movements        stock_movement[]
+  inventory_adjustments  inventory_adjustment[]
+  price_lists            price_list[]
+  quotation_lines        sales_quotation_line[]
+  sales_order_lines      sales_order_line[]
+  delivery_lines         delivery_line[]
+  sales_invoice_lines    sales_invoice_line[]
+  supplier_products      supplier_product[]
+  requisition_lines      purchase_requisition_line[]
+  purchase_order_lines   purchase_order_line[]
+  goods_receipt_lines    goods_receipt_line[]
+  supplier_invoice_lines supplier_invoice_line[]
+
+  @@unique([company_id, product_code])
+  @@unique([company_id, barcode])
+  @@index([category_id])
+}
+
+model warehouse {
+  id              String     @id @default(uuid())
+  company_id      String
+  warehouse_code  String
+  name            String
+  address_line1   String?
+  address_line2   String?
+  city            String?
+  country         String?
+  phone           String?
+  manager_user_id String?
+  is_default      Boolean    @default(false)
+  status          org_status @default(ACTIVE)
+  created_at      DateTime   @default(now())
+  updated_at      DateTime   @updatedAt
+
+  company company @relation(fields: [company_id], references: [id])
+  manager user?   @relation("warehouse_manager", fields: [manager_user_id], references: [id])
+
+  inventories           inventory[]
+  stock_movements       stock_movement[]
+  inventory_adjustments inventory_adjustment[]
+  sales_orders          sales_order[]
+  deliveries            delivery[]
+  goods_receipts        goods_receipt[]
+
+  @@unique([company_id, warehouse_code])
+}
+
+// Current stock position per product per warehouse. quantity_available is
+// derived (on_hand - reserved), never stored — a fourth number could disagree.
+// Concurrency is handled by conditional updates in the service, not a version
+// column: updateMany({ where: { id, quantity_on_hand: { gte: n } }, ... })
+// affects zero rows when stock is insufficient, so the check and the write are
+// a single atomic statement.
+model inventory {
+  id                String   @id @default(uuid())
+  company_id        String
+  product_id        String
+  warehouse_id      String
+  quantity_on_hand  Decimal  @default(0) @db.Decimal(12, 3)
+  quantity_reserved Decimal  @default(0) @db.Decimal(12, 3)
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  company   company   @relation(fields: [company_id], references: [id])
+  product   product   @relation(fields: [product_id], references: [id])
+  warehouse warehouse @relation(fields: [warehouse_id], references: [id])
+
+  @@unique([product_id, warehouse_id])
+  @@index([company_id])
+}
+
+enum stock_movement_type {
+  STOCK_IN
+  STOCK_OUT
+  TRANSFER_IN
+  TRANSFER_OUT
+  ADJUSTMENT
+}
+
+// Append-only ledger behind inventory.quantity_on_hand — no updated_at.
+// quantity is signed: positive adds stock, negative removes it, so the running
+// balance is a plain SUM(quantity). Warehouse transfers write two rows sharing
+// reference_type = 'TRANSFER' and the same reference_id.
+model stock_movement {
+  id              String              @id @default(uuid())
+  company_id      String
+  movement_number String
+  product_id      String
+  warehouse_id    String
+  movement_type   stock_movement_type
+  quantity        Decimal             @db.Decimal(12, 3)
+  balance_after   Decimal             @db.Decimal(12, 3)
+  reference_type  String?
+  reference_id    String?
+  reason          String?
+  performed_by    String
+  created_at      DateTime            @default(now())
+
+  company            company               @relation(fields: [company_id], references: [id])
+  product            product               @relation(fields: [product_id], references: [id])
+  warehouse          warehouse             @relation(fields: [warehouse_id], references: [id])
+  performed_by_user  user                  @relation("stock_movement_actor", fields: [performed_by], references: [id])
+  adjustment         inventory_adjustment?
+  delivery_line      delivery_line?
+  goods_receipt_line goods_receipt_line?
+
+  @@unique([company_id, movement_number])
+  @@index([product_id, warehouse_id, created_at])
+  @@index([reference_type, reference_id])
+}
+
+enum adjustment_reason_code {
+  PHYSICAL_COUNT
+  DAMAGE
+  EXPIRY
+  THEFT_OR_LOSS
+  SAMPLE_OR_PROMOTION
+  DATA_ENTRY_CORRECTION
+  OTHER
+}
+
+enum adjustment_status {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Write-offs are a common fraud path, so an adjustment is a request first and a
+// stock change only once approved. created_by must differ from approved_by —
+// enforced in the service, since Postgres cannot express it here.
+// stock_movement_id stays null until approval, then points at the ledger row
+// the approval created.
+model inventory_adjustment {
+  id                String                 @id @default(uuid())
+  company_id        String
+  adjustment_number String
+  product_id        String
+  warehouse_id      String
+  recorded_quantity Decimal                @db.Decimal(12, 3)
+  counted_quantity  Decimal                @db.Decimal(12, 3)
+  variance_quantity Decimal                @db.Decimal(12, 3)
+  reason_code       adjustment_reason_code
+  notes             String?
+  status            adjustment_status      @default(PENDING)
+  created_by        String
+  approved_by       String?
+  decided_at        DateTime?
+  decision_comment  String?
+  stock_movement_id String?                @unique
+  created_at        DateTime               @default(now())
+  updated_at        DateTime               @updatedAt
+
+  company          company         @relation(fields: [company_id], references: [id])
+  product          product         @relation(fields: [product_id], references: [id])
+  warehouse        warehouse       @relation(fields: [warehouse_id], references: [id])
+  created_by_user  user            @relation("adjustment_creator", fields: [created_by], references: [id])
+  approved_by_user user?           @relation("adjustment_approver", fields: [approved_by], references: [id])
+  stock_movement   stock_movement? @relation(fields: [stock_movement_id], references: [id])
+
+  @@unique([company_id, adjustment_number])
+  @@index([company_id, status])
+}
+
+// =============================================================================
+// Sales Management (Sprint 06)
+//
+// Document chain: quotation -> order -> delivery -> invoice.
+// Two conventions run through all four documents:
+//   1. Every line snapshots unit_price at the moment it was written. Changing a
+//      price list never rewrites history on an existing document.
+//   2. Header totals are stored, not derived. An issued invoice must always
+//      show the amount the customer agreed to, independent of its lines.
+// =============================================================================
+
+model customer {
+  id                     String     @id @default(uuid())
+  company_id             String
+  customer_code          String
+  name                   String
+  contact_person         String?
+  email                  String?
+  phone                  String?
+  tax_number             String?
+  billing_address_line1  String?
+  billing_address_line2  String?
+  billing_city           String?
+  billing_country        String?
+  shipping_address_line1 String?
+  shipping_address_line2 String?
+  shipping_city          String?
+  shipping_country       String?
+  payment_terms_days     Int        @default(0)
+  credit_limit           Decimal    @default(0) @db.Decimal(14, 2)
+  status                 org_status @default(ACTIVE)
+  created_at             DateTime   @default(now())
+  updated_at             DateTime   @updatedAt
+
+  company     company           @relation(fields: [company_id], references: [id])
+  quotations  sales_quotation[]
+  orders      sales_order[]
+  invoices    sales_invoice[]
+  receivables receivable[]
+  payments    payment[]
+
+  @@unique([company_id, customer_code])
+}
+
+// Scheduled pricing. Overlapping ACTIVE periods for the same product+currency
+// must be rejected in the service — Postgres cannot express that constraint
+// here, and an overlap means two valid prices on the same day.
+model price_list {
+  id                   String     @id @default(uuid())
+  company_id           String
+  product_id           String
+  currency             String
+  unit_price           Decimal    @db.Decimal(14, 2)
+  max_discount_percent Decimal    @default(0) @db.Decimal(5, 2)
+  valid_from           DateTime   @db.Date
+  valid_to             DateTime?  @db.Date
+  status               org_status @default(ACTIVE)
+  created_by           String
+  created_at           DateTime   @default(now())
+  updated_at           DateTime   @updatedAt
+
+  company         company @relation(fields: [company_id], references: [id])
+  product         product @relation(fields: [product_id], references: [id])
+  created_by_user user    @relation("price_list_creator", fields: [created_by], references: [id])
+
+  @@index([product_id, currency, valid_from])
+}
+
+enum sales_quotation_status {
+  DRAFT
+  SENT
+  ACCEPTED
+  CONVERTED
+  REJECTED
+  EXPIRED
+  CANCELLED
+}
+
+model sales_quotation {
+  id               String                 @id @default(uuid())
+  company_id       String
+  quotation_number String
+  customer_id      String
+  quotation_date   DateTime               @db.Date
+  valid_until      DateTime               @db.Date
+  status           sales_quotation_status @default(DRAFT)
+  subtotal         Decimal                @default(0) @db.Decimal(14, 2)
+  discount_total   Decimal                @default(0) @db.Decimal(14, 2)
+  total_amount     Decimal                @default(0) @db.Decimal(14, 2)
+  notes            String?
+  created_by       String
+  created_at       DateTime               @default(now())
+  updated_at       DateTime               @updatedAt
+
+  company         company                @relation(fields: [company_id], references: [id])
+  customer        customer               @relation(fields: [customer_id], references: [id])
+  created_by_user user                   @relation("quotation_creator", fields: [created_by], references: [id])
+  lines           sales_quotation_line[]
+  orders          sales_order[]
+
+  @@unique([company_id, quotation_number])
+  @@index([customer_id, status])
+}
+
+model sales_quotation_line {
+  id               String  @id @default(uuid())
+  quotation_id     String
+  product_id       String
+  line_number      Int
+  quantity         Decimal @db.Decimal(12, 3)
+  unit_price       Decimal @db.Decimal(14, 2)
+  discount_percent Decimal @default(0) @db.Decimal(5, 2)
+  discount_amount  Decimal @default(0) @db.Decimal(14, 2)
+  line_total       Decimal @db.Decimal(14, 2)
+
+  quotation sales_quotation @relation(fields: [quotation_id], references: [id], onDelete: Cascade)
+  product   product         @relation(fields: [product_id], references: [id])
+
+  @@unique([quotation_id, line_number])
+}
+
+enum sales_order_status {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_DELIVERED
+  DELIVERED
+  INVOICED
+  CLOSED
+  CANCELLED
+}
+
+model sales_order {
+  id                      String             @id @default(uuid())
+  company_id              String
+  order_number            String
+  customer_id             String
+  quotation_id            String?
+  warehouse_id            String
+  order_date              DateTime           @db.Date
+  requested_delivery_date DateTime?          @db.Date
+  status                  sales_order_status @default(DRAFT)
+  subtotal                Decimal            @default(0) @db.Decimal(14, 2)
+  discount_total          Decimal            @default(0) @db.Decimal(14, 2)
+  total_amount            Decimal            @default(0) @db.Decimal(14, 2)
+  notes                   String?
+  created_by              String
+  confirmed_by            String?
+  confirmed_at            DateTime?
+  created_at              DateTime           @default(now())
+  updated_at              DateTime           @updatedAt
+
+  company           company            @relation(fields: [company_id], references: [id])
+  customer          customer           @relation(fields: [customer_id], references: [id])
+  quotation         sales_quotation?   @relation(fields: [quotation_id], references: [id])
+  warehouse         warehouse          @relation(fields: [warehouse_id], references: [id])
+  created_by_user   user               @relation("order_creator", fields: [created_by], references: [id])
+  confirmed_by_user user?              @relation("order_confirmer", fields: [confirmed_by], references: [id])
+  lines             sales_order_line[]
+  deliveries        delivery[]
+  invoices          sales_invoice[]
+
+  @@unique([company_id, order_number])
+  @@index([customer_id, status])
+}
+
+// delivered_quantity is a running counter maintained as deliveries are posted.
+// It must always equal the sum of this line's delivery_line rows, and may never
+// exceed quantity — both enforced in the service, inside the same transaction
+// that writes the delivery.
+model sales_order_line {
+  id                 String  @id @default(uuid())
+  sales_order_id     String
+  product_id         String
+  line_number        Int
+  quantity           Decimal @db.Decimal(12, 3)
+  unit_price         Decimal @db.Decimal(14, 2)
+  discount_percent   Decimal @default(0) @db.Decimal(5, 2)
+  discount_amount    Decimal @default(0) @db.Decimal(14, 2)
+  line_total         Decimal @db.Decimal(14, 2)
+  delivered_quantity Decimal @default(0) @db.Decimal(12, 3)
+
+  sales_order    sales_order     @relation(fields: [sales_order_id], references: [id], onDelete: Cascade)
+  product        product         @relation(fields: [product_id], references: [id])
+  delivery_lines delivery_line[]
+
+  @@unique([sales_order_id, line_number])
+}
+
+enum delivery_status {
+  COMPLETED
+  CANCELLED
+}
+
+model delivery {
+  id              String          @id @default(uuid())
+  company_id      String
+  delivery_number String
+  sales_order_id  String
+  warehouse_id    String
+  delivery_date   DateTime        @db.Date
+  status          delivery_status @default(COMPLETED)
+  notes           String?
+  delivered_by    String
+  created_at      DateTime        @default(now())
+  updated_at      DateTime        @updatedAt
+
+  company           company         @relation(fields: [company_id], references: [id])
+  sales_order       sales_order     @relation(fields: [sales_order_id], references: [id])
+  warehouse         warehouse       @relation(fields: [warehouse_id], references: [id])
+  delivered_by_user user            @relation("delivery_shipper", fields: [delivered_by], references: [id])
+  lines             delivery_line[]
+
+  @@unique([company_id, delivery_number])
+  @@index([sales_order_id])
+}
+
+// Each line carries the stock_movement it produced, so the goods that left the
+// warehouse are traceable from the shipment back to the ledger.
+model delivery_line {
+  id                  String  @id @default(uuid())
+  delivery_id         String
+  sales_order_line_id String
+  product_id          String
+  line_number         Int
+  quantity            Decimal @db.Decimal(12, 3)
+  stock_movement_id   String  @unique
+
+  delivery         delivery            @relation(fields: [delivery_id], references: [id], onDelete: Cascade)
+  sales_order_line sales_order_line    @relation(fields: [sales_order_line_id], references: [id])
+  product          product             @relation(fields: [product_id], references: [id])
+  stock_movement   stock_movement      @relation(fields: [stock_movement_id], references: [id])
+  invoice_line     sales_invoice_line?
+
+  @@unique([delivery_id, line_number])
+  @@index([sales_order_line_id])
+}
+
+enum sales_invoice_status {
+  DRAFT
+  ISSUED
+  PAID
+  CANCELLED
+}
+
+// OVERDUE is deliberately not a status: it is derived from
+// status = ISSUED AND due_date < today. Storing it would need a nightly job to
+// keep every invoice row correct.
+model sales_invoice {
+  id               String               @id @default(uuid())
+  company_id       String
+  invoice_number   String
+  customer_id      String
+  sales_order_id   String
+  invoice_date     DateTime             @db.Date
+  due_date         DateTime             @db.Date
+  status           sales_invoice_status @default(DRAFT)
+  subtotal         Decimal              @default(0) @db.Decimal(14, 2)
+  discount_total   Decimal              @default(0) @db.Decimal(14, 2)
+  total_amount     Decimal              @default(0) @db.Decimal(14, 2)
+  notes            String?
+  issued_by        String?
+  issued_at        DateTime?
+  cancelled_reason String?
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+
+  company        company              @relation(fields: [company_id], references: [id])
+  customer       customer             @relation(fields: [customer_id], references: [id])
+  sales_order    sales_order          @relation(fields: [sales_order_id], references: [id])
+  issued_by_user user?                @relation("invoice_issuer", fields: [issued_by], references: [id])
+  lines          sales_invoice_line[]
+  receivable     receivable?
+
+  @@unique([company_id, invoice_number])
+  @@index([customer_id, status])
+  @@index([company_id, status, due_date])
+}
+
+// delivery_line_id is unique across the whole table: a shipment can be billed
+// exactly once, so double-invoicing is impossible rather than merely discouraged.
+model sales_invoice_line {
+  id               String  @id @default(uuid())
+  sales_invoice_id String
+  delivery_line_id String  @unique
+  product_id       String
+  line_number      Int
+  quantity         Decimal @db.Decimal(12, 3)
+  unit_price       Decimal @db.Decimal(14, 2)
+  discount_amount  Decimal @default(0) @db.Decimal(14, 2)
+  line_total       Decimal @db.Decimal(14, 2)
+
+  sales_invoice sales_invoice @relation(fields: [sales_invoice_id], references: [id], onDelete: Cascade)
+  delivery_line delivery_line @relation(fields: [delivery_line_id], references: [id])
+  product       product       @relation(fields: [product_id], references: [id])
+
+  @@unique([sales_invoice_id, line_number])
+}
+
+// =============================================================================
+// Purchasing Management (Sprint 07)
+//
+// Document chain: requisition -> purchase order -> goods receipt -> invoice.
+// The mirror of sales: stock flows in, money flows out. Same conventions —
+// lines snapshot prices, header totals are stored, receipts write the ledger.
+// =============================================================================
+
+model supplier {
+  id                 String     @id @default(uuid())
+  company_id         String
+  supplier_code      String
+  name               String
+  contact_person     String?
+  email              String?
+  phone              String?
+  tax_number         String?
+  address_line1      String?
+  address_line2      String?
+  city               String?
+  country            String?
+  payment_terms_days Int        @default(0)
+  status             org_status @default(ACTIVE)
+  created_at         DateTime   @default(now())
+  updated_at         DateTime   @updatedAt
+
+  company           company               @relation(fields: [company_id], references: [id])
+  bank_detail       supplier_bank_detail?
+  products          supplier_product[]
+  purchase_orders   purchase_order[]
+  supplier_invoices supplier_invoice[]
+  payables          payable[]
+  payments          payment[]
+
+  @@unique([company_id, supplier_code])
+}
+
+// Split from `supplier` on purpose. Changing an account number redirects real
+// money, so this table is permission-gated separately from ordinary supplier
+// edits and its changes are audited in their own right.
+model supplier_bank_detail {
+  id             String   @id @default(uuid())
+  company_id     String
+  supplier_id    String   @unique
+  bank_name      String
+  account_name   String
+  account_number String
+  swift_code     String?
+  updated_by     String
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  company         company  @relation(fields: [company_id], references: [id])
+  supplier        supplier @relation(fields: [supplier_id], references: [id])
+  updated_by_user user     @relation("bank_detail_editor", fields: [updated_by], references: [id])
+}
+
+// lead_time_days is what makes reorder planning possible: knowing a part takes
+// 14 days tells you when to order, not merely that stock is low.
+model supplier_product {
+  id             String   @id @default(uuid())
+  company_id     String
+  supplier_id    String
+  product_id     String
+  lead_time_days Int?
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  company  company  @relation(fields: [company_id], references: [id])
+  supplier supplier @relation(fields: [supplier_id], references: [id])
+  product  product  @relation(fields: [product_id], references: [id])
+
+  @@unique([supplier_id, product_id])
+}
+
+enum purchase_requisition_status {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+  CONVERTED
+  CANCELLED
+}
+
+model purchase_requisition {
+  id                     String                      @id @default(uuid())
+  company_id             String
+  requisition_number     String
+  requested_by           String
+  department_id          String
+  requisition_date       DateTime                    @db.Date
+  required_date          DateTime?                   @db.Date
+  justification          String?
+  status                 purchase_requisition_status @default(DRAFT)
+  total_estimated_amount Decimal                     @default(0) @db.Decimal(14, 2)
+  submitted_at           DateTime?
+  created_at             DateTime                    @default(now())
+  updated_at             DateTime                    @updatedAt
+
+  company        company                     @relation(fields: [company_id], references: [id])
+  requester      employee                    @relation("requisition_requester", fields: [requested_by], references: [id])
+  department     department                  @relation(fields: [department_id], references: [id])
+  lines          purchase_requisition_line[]
+  approvals      requisition_approval[]
+  purchase_order purchase_order?
+
+  @@unique([company_id, requisition_number])
+  @@index([department_id, status])
+}
+
+model purchase_requisition_line {
+  id                  String  @id @default(uuid())
+  requisition_id      String
+  product_id          String
+  line_number         Int
+  quantity            Decimal @db.Decimal(12, 3)
+  estimated_unit_cost Decimal @db.Decimal(14, 2)
+  line_estimate       Decimal @db.Decimal(14, 2)
+  notes               String?
+
+  requisition          purchase_requisition  @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  product              product               @relation(fields: [product_id], references: [id])
+  purchase_order_lines purchase_order_line[]
+
+  @@unique([requisition_id, line_number])
+}
+
+// Amount thresholds per role, ordered into an approval chain. Superseded by the
+// Sprint 10 workflow engine (issue-068), which keeps these read-only for
+// requisitions approved before the migration.
+model approval_limit {
+  id                  String   @id @default(uuid())
+  company_id          String
+  role_id             String
+  step_order          Int
+  max_approval_amount Decimal  @db.Decimal(14, 2)
+  updated_by          String
+  created_at          DateTime @default(now())
+  updated_at          DateTime @updatedAt
+
+  company         company @relation(fields: [company_id], references: [id])
+  role            role    @relation(fields: [role_id], references: [id])
+  updated_by_user user    @relation("approval_limit_editor", fields: [updated_by], references: [id])
+
+  @@unique([company_id, role_id, step_order])
+}
+
+enum requisition_approval_status {
+  PENDING
+  APPROVED
+  REJECTED
+  SKIPPED
+}
+
+model requisition_approval {
+  id             String                      @id @default(uuid())
+  company_id     String
+  requisition_id String
+  step_order     Int
+  approver_id    String
+  status         requisition_approval_status @default(PENDING)
+  comment        String?
+  decided_at     DateTime?
+  created_at     DateTime                    @default(now())
+  updated_at     DateTime                    @updatedAt
+
+  company     company              @relation(fields: [company_id], references: [id])
+  requisition purchase_requisition @relation(fields: [requisition_id], references: [id], onDelete: Cascade)
+  approver    employee             @relation("requisition_approver", fields: [approver_id], references: [id])
+
+  @@unique([requisition_id, step_order])
+  @@index([approver_id, status])
+}
+
+enum purchase_order_status {
+  DRAFT
+  ISSUED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  INVOICED
+  CLOSED
+  CANCELLED
+}
+
+// requisition_id is unique: a requisition converts to a purchase order exactly
+// once, so the same approved spend cannot be ordered twice.
+model purchase_order {
+  id             String                @id @default(uuid())
+  company_id     String
+  order_number   String
+  supplier_id    String
+  requisition_id String?               @unique
+  order_date     DateTime              @db.Date
+  expected_date  DateTime?             @db.Date
+  status         purchase_order_status @default(DRAFT)
+  subtotal       Decimal               @default(0) @db.Decimal(14, 2)
+  total_amount   Decimal               @default(0) @db.Decimal(14, 2)
+  notes          String?
+  created_by     String
+  issued_by      String?
+  issued_at      DateTime?
+  created_at     DateTime              @default(now())
+  updated_at     DateTime              @updatedAt
+
+  company           company               @relation(fields: [company_id], references: [id])
+  supplier          supplier              @relation(fields: [supplier_id], references: [id])
+  requisition       purchase_requisition? @relation(fields: [requisition_id], references: [id])
+  created_by_user   user                  @relation("po_creator", fields: [created_by], references: [id])
+  issued_by_user    user?                 @relation("po_issuer", fields: [issued_by], references: [id])
+  lines             purchase_order_line[]
+  goods_receipts    goods_receipt[]
+  supplier_invoices supplier_invoice[]
+
+  @@unique([company_id, order_number])
+  @@index([supplier_id, status])
+}
+
+// received_quantity mirrors delivered_quantity on the sales side: a running
+// counter that must equal the sum of this line's accepted goods_receipt_line
+// quantities, and may not exceed quantity.
+model purchase_order_line {
+  id                  String  @id @default(uuid())
+  purchase_order_id   String
+  requisition_line_id String?
+  product_id          String
+  line_number         Int
+  quantity            Decimal @db.Decimal(12, 3)
+  unit_price          Decimal @db.Decimal(14, 2)
+  line_total          Decimal @db.Decimal(14, 2)
+  received_quantity   Decimal @default(0) @db.Decimal(12, 3)
+
+  purchase_order         purchase_order             @relation(fields: [purchase_order_id], references: [id], onDelete: Cascade)
+  requisition_line       purchase_requisition_line? @relation(fields: [requisition_line_id], references: [id])
+  product                product                    @relation(fields: [product_id], references: [id])
+  goods_receipt_lines    goods_receipt_line[]
+  supplier_invoice_lines supplier_invoice_line[]
+
+  @@unique([purchase_order_id, line_number])
+}
+
+model goods_receipt {
+  id                String   @id @default(uuid())
+  company_id        String
+  receipt_number    String
+  purchase_order_id String
+  warehouse_id      String
+  receipt_date      DateTime @db.Date
+  notes             String?
+  received_by       String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  company          company              @relation(fields: [company_id], references: [id])
+  purchase_order   purchase_order       @relation(fields: [purchase_order_id], references: [id])
+  warehouse        warehouse            @relation(fields: [warehouse_id], references: [id])
+  received_by_user user                 @relation("receipt_receiver", fields: [received_by], references: [id])
+  lines            goods_receipt_line[]
+
+  @@unique([company_id, receipt_number])
+  @@index([purchase_order_id])
+}
+
+// stock_movement_id is nullable because only accepted quantity enters stock —
+// a line rejected in full moves nothing into the warehouse.
+model goods_receipt_line {
+  id                     String  @id @default(uuid())
+  receipt_id             String
+  purchase_order_line_id String
+  product_id             String
+  line_number            Int
+  accepted_quantity      Decimal @db.Decimal(12, 3)
+  rejected_quantity      Decimal @default(0) @db.Decimal(12, 3)
+  rejection_reason       String?
+  stock_movement_id      String? @unique
+
+  receipt             goods_receipt           @relation(fields: [receipt_id], references: [id], onDelete: Cascade)
+  purchase_order_line purchase_order_line     @relation(fields: [purchase_order_line_id], references: [id])
+  product             product                 @relation(fields: [product_id], references: [id])
+  stock_movement      stock_movement?         @relation(fields: [stock_movement_id], references: [id])
+  invoice_lines       supplier_invoice_line[]
+
+  @@unique([receipt_id, line_number])
+  @@index([purchase_order_line_id])
+}
+
+enum supplier_invoice_match_status {
+  PENDING
+  MATCHED
+  HELD
+}
+
+enum supplier_invoice_status {
+  DRAFT
+  APPROVED
+  HELD
+  CANCELLED
+}
+
+// Three-way match lives here: the invoice is checked against the purchase order
+// (the price agreed) and the goods receipt (the quantity actually received).
+// An invoice that fails either check is HELD rather than paid, and clearing it
+// requires an explicit, attributed override.
+model supplier_invoice {
+  id                 String                        @id @default(uuid())
+  company_id         String
+  invoice_number     String
+  supplier_reference String?
+  supplier_id        String
+  purchase_order_id  String
+  invoice_date       DateTime                      @db.Date
+  due_date           DateTime                      @db.Date
+  match_status       supplier_invoice_match_status @default(PENDING)
+  status             supplier_invoice_status       @default(DRAFT)
+  total_amount       Decimal                       @default(0) @db.Decimal(14, 2)
+  overridden_by      String?
+  override_reason    String?
+  overridden_at      DateTime?
+  created_at         DateTime                      @default(now())
+  updated_at         DateTime                      @updatedAt
+
+  company            company                 @relation(fields: [company_id], references: [id])
+  supplier           supplier                @relation(fields: [supplier_id], references: [id])
+  purchase_order     purchase_order          @relation(fields: [purchase_order_id], references: [id])
+  overridden_by_user user?                   @relation("invoice_match_overrider", fields: [overridden_by], references: [id])
+  lines              supplier_invoice_line[]
+  payable            payable?
+
+  @@unique([company_id, invoice_number])
+  @@index([supplier_id, status])
+  @@index([company_id, status, due_date])
+}
+
+// Each line points at both sides of the match: the ordered line (price) and the
+// received line (quantity). The two boolean flags record the outcome per line so
+// a partial mismatch is visible instead of collapsing into one header verdict.
+model supplier_invoice_line {
+  id                     String  @id @default(uuid())
+  supplier_invoice_id    String
+  purchase_order_line_id String
+  goods_receipt_line_id  String?
+  product_id             String
+  line_number            Int
+  invoiced_quantity      Decimal @db.Decimal(12, 3)
+  invoiced_unit_price    Decimal @db.Decimal(14, 2)
+  line_total             Decimal @db.Decimal(14, 2)
+  quantity_match         Boolean @default(false)
+  price_match            Boolean @default(false)
+  match_notes            String?
+
+  supplier_invoice    supplier_invoice    @relation(fields: [supplier_invoice_id], references: [id], onDelete: Cascade)
+  purchase_order_line purchase_order_line @relation(fields: [purchase_order_line_id], references: [id])
+  goods_receipt_line  goods_receipt_line? @relation(fields: [goods_receipt_line_id], references: [id])
+  product             product             @relation(fields: [product_id], references: [id])
+
+  @@unique([supplier_invoice_id, line_number])
+}
+
+// One tolerance setting per company: how much price variance the three-way
+// match forgives before holding an invoice.
+model invoice_match_tolerance {
+  id                String   @id @default(uuid())
+  company_id        String   @unique
+  tolerance_percent Decimal  @default(0) @db.Decimal(5, 2)
+  updated_by        String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+
+  company         company @relation(fields: [company_id], references: [id])
+  updated_by_user user    @relation("tolerance_editor", fields: [updated_by], references: [id])
+}
+
+// =============================================================================
+// Finance & Accounting (Sprint 08)
+//
+// Double-entry: every journal entry must have SUM(debit) = SUM(credit) before
+// it can be POSTED. Postgres cannot express a cross-row constraint, so the
+// balance check lives in the service, inside the posting transaction.
+//
+// Posted entries are immutable. A mistake is fixed by posting a reversing
+// entry (reversal_of_id), never by editing history.
+// =============================================================================
+
+enum account_type {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+// Nested on purpose, unlike department and product_category: a balance sheet's
+// "Total Assets" line IS the rollup of this tree. is_postable marks the leaves —
+// you post to 1100 Receivables, never to its 1000 Assets parent.
+model account {
+  id                String       @id @default(uuid())
+  company_id        String
+  account_code      String
+  name              String
+  account_type      account_type
+  parent_account_id String?
+  is_postable       Boolean      @default(true)
+  status            org_status   @default(ACTIVE)
+  created_at        DateTime     @default(now())
+  updated_at        DateTime     @updatedAt
+
+  company        company              @relation(fields: [company_id], references: [id])
+  parent_account account?             @relation("account_hierarchy", fields: [parent_account_id], references: [id])
+  child_accounts account[]            @relation("account_hierarchy")
+  journal_lines  journal_entry_line[]
+  mappings       account_mapping[]
+
+  @@unique([company_id, account_code])
+  @@index([parent_account_id])
+}
+
+enum fiscal_period_status {
+  OPEN
+  CLOSED
+}
+
+// Closing a period freezes it: no entry may be posted into a CLOSED period,
+// which is what stops last quarter's numbers changing after they were reported.
+model fiscal_period {
+  id         String               @id @default(uuid())
+  company_id String
+  name       String
+  start_date DateTime             @db.Date
+  end_date   DateTime             @db.Date
+  status     fiscal_period_status @default(OPEN)
+  closed_by  String?
+  closed_at  DateTime?
+  created_at DateTime             @default(now())
+  updated_at DateTime             @updatedAt
+
+  company         company         @relation(fields: [company_id], references: [id])
+  closed_by_user  user?           @relation("period_closer", fields: [closed_by], references: [id])
+  journal_entries journal_entry[]
+
+  @@unique([company_id, name])
+  @@index([company_id, start_date, end_date])
+}
+
+enum journal_entry_status {
+  DRAFT
+  POSTED
+}
+
+// source_type / source_id record what produced the entry — a sales invoice, a
+// supplier invoice, a payment, or MANUAL. They are deliberately loose rather
+// than four nullable foreign keys, because the set of sources grows over time.
+model journal_entry {
+  id               String               @id @default(uuid())
+  company_id       String
+  entry_number     String
+  entry_date       DateTime             @db.Date
+  fiscal_period_id String
+  description      String?
+  source_type      String?
+  source_id        String?
+  reversal_of_id   String?              @unique
+  status           journal_entry_status @default(DRAFT)
+  posted_by        String?
+  posted_at        DateTime?
+  created_at       DateTime             @default(now())
+  updated_at       DateTime             @updatedAt
+
+  company        company              @relation(fields: [company_id], references: [id])
+  fiscal_period  fiscal_period        @relation(fields: [fiscal_period_id], references: [id])
+  posted_by_user user?                @relation("entry_poster", fields: [posted_by], references: [id])
+  reversal_of    journal_entry?       @relation("entry_reversal", fields: [reversal_of_id], references: [id])
+  reversed_by    journal_entry?       @relation("entry_reversal")
+  lines          journal_entry_line[]
+  receivables    receivable[]
+  payables       payable[]
+  payments       payment[]
+
+  @@unique([company_id, entry_number])
+  @@index([fiscal_period_id, status])
+  @@index([source_type, source_id])
+}
+
+// Exactly one of debit_amount / credit_amount is non-zero on each line, and the
+// two sums must match across the entry. Both rules are service-enforced.
+model journal_entry_line {
+  id               String  @id @default(uuid())
+  journal_entry_id String
+  account_id       String
+  line_number      Int
+  debit_amount     Decimal @default(0) @db.Decimal(14, 2)
+  credit_amount    Decimal @default(0) @db.Decimal(14, 2)
+  description      String?
+
+  journal_entry journal_entry @relation(fields: [journal_entry_id], references: [id], onDelete: Cascade)
+  account       account       @relation(fields: [account_id], references: [id])
+
+  @@unique([journal_entry_id, line_number])
+  @@index([account_id])
+}
+
+enum settlement_status {
+  OPEN
+  PARTIALLY_PAID
+  SETTLED
+}
+
+// The AR subledger. sales_invoice_id is unique: issuing an invoice creates
+// exactly one receivable, so a customer can never be billed into AR twice.
+// outstanding_amount is a cached counter — it must equal
+// original_amount minus the sum of applied payments.
+model receivable {
+  id                 String            @id @default(uuid())
+  company_id         String
+  customer_id        String
+  sales_invoice_id   String            @unique
+  journal_entry_id   String
+  invoice_date       DateTime          @db.Date
+  due_date           DateTime          @db.Date
+  original_amount    Decimal           @db.Decimal(14, 2)
+  outstanding_amount Decimal           @db.Decimal(14, 2)
+  status             settlement_status @default(OPEN)
+  created_at         DateTime          @default(now())
+  updated_at         DateTime          @updatedAt
+
+  company       company               @relation(fields: [company_id], references: [id])
+  customer      customer              @relation(fields: [customer_id], references: [id])
+  sales_invoice sales_invoice         @relation(fields: [sales_invoice_id], references: [id])
+  journal_entry journal_entry         @relation(fields: [journal_entry_id], references: [id])
+  applications  payment_application[]
+
+  @@index([customer_id, status])
+  @@index([company_id, status, due_date])
+}
+
+// The AP subledger — the mirror of receivable, for money you owe.
+model payable {
+  id                  String            @id @default(uuid())
+  company_id          String
+  supplier_id         String
+  supplier_invoice_id String            @unique
+  journal_entry_id    String
+  invoice_date        DateTime          @db.Date
+  due_date            DateTime          @db.Date
+  original_amount     Decimal           @db.Decimal(14, 2)
+  outstanding_amount  Decimal           @db.Decimal(14, 2)
+  status              settlement_status @default(OPEN)
+  created_at          DateTime          @default(now())
+  updated_at          DateTime          @updatedAt
+
+  company          company               @relation(fields: [company_id], references: [id])
+  supplier         supplier              @relation(fields: [supplier_id], references: [id])
+  supplier_invoice supplier_invoice      @relation(fields: [supplier_invoice_id], references: [id])
+  journal_entry    journal_entry         @relation(fields: [journal_entry_id], references: [id])
+  applications     payment_application[]
+
+  @@index([supplier_id, status])
+  @@index([company_id, status, due_date])
+}
+
+enum payment_type {
+  CUSTOMER_RECEIPT
+  SUPPLIER_PAYMENT
+}
+
+enum payment_method {
+  CASH
+  BANK_TRANSFER
+  CHECK
+  CARD
+}
+
+enum payment_status {
+  POSTED
+  REVERSED
+}
+
+// customer_id and supplier_id are both nullable and exactly one must be set —
+// a receipt has a customer, a payment has a supplier. Two real foreign keys
+// instead of one untyped party_id, so the database still guarantees the party
+// exists and cannot hold a supplier id on a customer receipt.
+model payment {
+  id               String         @id @default(uuid())
+  company_id       String
+  payment_number   String
+  payment_type     payment_type
+  customer_id      String?
+  supplier_id      String?
+  journal_entry_id String
+  payment_date     DateTime       @db.Date
+  amount           Decimal        @db.Decimal(14, 2)
+  method           payment_method
+  reference        String?
+  status           payment_status @default(POSTED)
+  created_by       String
+  created_at       DateTime       @default(now())
+  updated_at       DateTime       @updatedAt
+
+  company         company               @relation(fields: [company_id], references: [id])
+  customer        customer?             @relation(fields: [customer_id], references: [id])
+  supplier        supplier?             @relation(fields: [supplier_id], references: [id])
+  journal_entry   journal_entry         @relation(fields: [journal_entry_id], references: [id])
+  created_by_user user                  @relation("payment_creator", fields: [created_by], references: [id])
+  applications    payment_application[]
+
+  @@unique([company_id, payment_number])
+  @@index([customer_id])
+  @@index([supplier_id])
+}
+
+// One payment can settle several invoices, and one invoice can be settled by
+// several payments — this is the join that makes partial payment work.
+// Exactly one of receivable_id / payable_id is set, matching the payment's type,
+// and the sum of applied_amount may not exceed the payment's amount.
+model payment_application {
+  id             String   @id @default(uuid())
+  company_id     String
+  payment_id     String
+  receivable_id  String?
+  payable_id     String?
+  applied_amount Decimal  @db.Decimal(14, 2)
+  created_at     DateTime @default(now())
+
+  company    company     @relation(fields: [company_id], references: [id])
+  payment    payment     @relation(fields: [payment_id], references: [id], onDelete: Cascade)
+  receivable receivable? @relation(fields: [receivable_id], references: [id])
+  payable    payable?    @relation(fields: [payable_id], references: [id])
+
+  @@index([payment_id])
+  @@index([receivable_id])
+  @@index([payable_id])
+}
+
+// =============================================================================
+// Reporting & Analytics (Sprint 09)
+//
+// Configuration only. No table here stores report *results* — reports are
+// queries over the transactional tables above, computed on demand. Duplicating
+// sales or ledger data into a reporting table would create a second source of
+// truth that drifts from the first.
+//
+// The `parameters` Json columns hold a snapshot of the inputs a run was given.
+// That is deliberate: it records what was asked, not a structure to query.
+// =============================================================================
+
+// The report catalog. required_permission ties each report to the permission
+// system, so the menu a user sees is derived rather than hardcoded.
+model report_definition {
+  id                  String     @id @default(uuid())
+  company_id          String
+  report_code         String
+  name                String
+  category            String
+  description         String?
+  required_permission String?
+  data_source         String
+  status              org_status @default(ACTIVE)
+  created_at          DateTime   @default(now())
+  updated_at          DateTime   @updatedAt
+
+  company    company            @relation(fields: [company_id], references: [id])
+  parameters report_parameter[]
+  executions report_execution[]
+  exports    report_export[]
+  schedules  report_schedule[]
+
+  @@unique([company_id, report_code])
+}
+
+enum report_parameter_type {
+  DATE
+  STRING
+  NUMBER
+  BOOLEAN
+  REFERENCE
+}
+
+model report_parameter {
+  id                   String                @id @default(uuid())
+  report_definition_id String
+  parameter_key        String
+  label                String
+  data_type            report_parameter_type
+  is_required          Boolean               @default(false)
+  default_value        String?
+  display_order        Int                   @default(0)
+
+  report_definition report_definition @relation(fields: [report_definition_id], references: [id], onDelete: Cascade)
+
+  @@unique([report_definition_id, parameter_key])
+}
+
+enum report_run_status {
+  SUCCESS
+  FAILED
+}
+
+// Reports are how data leaves a system, so every run is recorded. Sprint 11's
+// security review reads this table to answer "who exported customer data?".
+model report_execution {
+  id                   String            @id @default(uuid())
+  company_id           String
+  report_definition_id String
+  executed_by          String
+  parameters           Json?
+  row_count            Int?
+  duration_ms          Int?
+  status               report_run_status
+  error                String?
+  executed_at          DateTime          @default(now())
+
+  company           company           @relation(fields: [company_id], references: [id])
+  report_definition report_definition @relation(fields: [report_definition_id], references: [id])
+  executed_by_user  user              @relation("report_executor", fields: [executed_by], references: [id])
+
+  @@index([report_definition_id, executed_at])
+  @@index([executed_by, executed_at])
+}
+
+enum report_export_format {
+  CSV
+  PDF
+}
+
+enum report_export_status {
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// A large export cannot finish inside one request, so it becomes a job row the
+// client polls. file_path is null until the job completes.
+model report_export {
+  id                   String               @id @default(uuid())
+  company_id           String
+  report_definition_id String
+  requested_by         String
+  parameters           Json?
+  format               report_export_format
+  status               report_export_status @default(PROCESSING)
+  file_path            String?
+  row_count            Int?
+  error                String?
+  requested_at         DateTime             @default(now())
+  completed_at         DateTime?
+
+  company           company           @relation(fields: [company_id], references: [id])
+  report_definition report_definition @relation(fields: [report_definition_id], references: [id])
+  requested_by_user user              @relation("report_exporter", fields: [requested_by], references: [id])
+
+  @@index([company_id, status])
+  @@index([requested_by, requested_at])
+}
+
+enum report_schedule_frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+model report_schedule {
+  id                   String                    @id @default(uuid())
+  company_id           String
+  report_definition_id String
+  frequency            report_schedule_frequency
+  parameters           Json?
+  export_format        report_export_format
+  is_active            Boolean                   @default(true)
+  next_run_at          DateTime?
+  created_by           String
+  created_at           DateTime                  @default(now())
+  updated_at           DateTime                  @updatedAt
+
+  company           company                     @relation(fields: [company_id], references: [id])
+  report_definition report_definition           @relation(fields: [report_definition_id], references: [id])
+  created_by_user   user                        @relation("schedule_creator", fields: [created_by], references: [id])
+  recipients        report_schedule_recipient[]
+  runs              report_schedule_run[]
+
+  @@index([is_active, next_run_at])
+}
+
+// A join table rather than an array of ids, so each recipient is a real foreign
+// key. A deactivated or deleted user cannot linger invisibly in a distribution
+// list, and "which reports does this person receive?" is a normal query.
+model report_schedule_recipient {
+  report_schedule_id String
+  user_id            String
+  created_at         DateTime @default(now())
+
+  report_schedule report_schedule @relation(fields: [report_schedule_id], references: [id], onDelete: Cascade)
+  user            user            @relation(fields: [user_id], references: [id])
+
+  @@id([report_schedule_id, user_id])
+  @@index([user_id])
+}
+
+enum report_schedule_run_status {
+  SUCCESS
+  FAILED
+  RETRYING
+}
+
+model report_schedule_run {
+  id                 String                     @id @default(uuid())
+  company_id         String
+  report_schedule_id String
+  status             report_schedule_run_status
+  attempt_count      Int                        @default(0)
+  error              String?
+  started_at         DateTime                   @default(now())
+  completed_at       DateTime?
+
+  company         company         @relation(fields: [company_id], references: [id])
+  report_schedule report_schedule @relation(fields: [report_schedule_id], references: [id], onDelete: Cascade)
+
+  @@index([report_schedule_id, started_at])
+}
+
+// Display metadata only. The seven formulas from issue-059 live in TypeScript
+// where they are type-checked, unit-tested, and reviewable in a pull request —
+// a formula string stored here would be none of those things.
+model kpi_definition {
+  id                String     @id @default(uuid())
+  company_id        String
+  kpi_code          String
+  name              String
+  description       String?
+  unit              String?
+  comparison_period String?
+  status            org_status @default(ACTIVE)
+  created_at        DateTime   @default(now())
+  updated_at        DateTime   @updatedAt
+
+  company company @relation(fields: [company_id], references: [id])
+
+  @@unique([company_id, kpi_code])
+}
+
+// =============================================================================
+// Workflow & Notification Engine (Sprint 10)
+//
+// The general-purpose replacement for Sprint 07's approval_limit and
+// requisition_approval, which only ever knew how to route requisitions. This
+// engine routes any document type, so leave requests, requisitions and journal
+// entries share one approval mechanism instead of three hardcoded ones.
+// =============================================================================
+
+// Versioned on purpose: a running instance pins the version it started under,
+// so editing a workflow never rewrites the rules an in-flight approval is
+// already halfway through.
+model workflow_definition {
+  id            String   @id @default(uuid())
+  company_id    String
+  code          String
+  name          String
+  document_type String
+  version       Int      @default(1)
+  is_active     Boolean  @default(true)
+  created_by    String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  company         company             @relation(fields: [company_id], references: [id])
+  created_by_user user                @relation("workflow_author", fields: [created_by], references: [id])
+  steps           workflow_step[]
+  instances       workflow_instance[]
+
+  @@unique([company_id, code, version])
+  @@index([company_id, document_type, is_active])
+}
+
+// Both rules resolve at runtime from data already in the schema —
+// employee.manager_id and department.head_user_id — so routing follows people
+// when they change jobs instead of pointing at a stale named approver.
+enum approver_rule_type {
+  REPORTING_MANAGER
+  DEPARTMENT_HEAD
+}
+
+// min_amount / max_amount are structured columns rather than an expression
+// string: typed, indexable, and impossible to malform. Both null means the step
+// always applies. This is what replaces Sprint 07's approval_limit thresholds.
+model workflow_step {
+  id                     String             @id @default(uuid())
+  workflow_definition_id String
+  step_order             Int
+  approver_rule_type     approver_rule_type
+  min_amount             Decimal?           @db.Decimal(14, 2)
+  max_amount             Decimal?           @db.Decimal(14, 2)
+  escalation_hours       Int?
+
+  workflow_definition workflow_definition @relation(fields: [workflow_definition_id], references: [id], onDelete: Cascade)
+
+  @@unique([workflow_definition_id, step_order])
+}
+
+enum workflow_instance_status {
+  PENDING
+  IN_PROGRESS
+  APPROVED
+  REJECTED
+  CANCELLED
+  ESCALATED
+}
+
+// document_type + document_id is an untyped reference, and here that is the
+// right call rather than a compromise: the set of approvable documents is
+// open-ended and grows with every module, so a foreign key per type would grow
+// without end. Contrast payment, where the party is one of exactly two known
+// tables and gets two real foreign keys instead.
+//
+// The cost is real: nothing stops document_id holding a deleted id. Deleting a
+// document must cancel its instances in the same transaction.
+model workflow_instance {
+  id                     String                   @id @default(uuid())
+  company_id             String
+  workflow_definition_id String
+  document_type          String
+  document_id            String
+  current_step_order     Int                      @default(1)
+  status                 workflow_instance_status @default(PENDING)
+  started_by             String
+  started_at             DateTime                 @default(now())
+  completed_at           DateTime?
+  updated_at             DateTime                 @updatedAt
+
+  company             company              @relation(fields: [company_id], references: [id])
+  workflow_definition workflow_definition  @relation(fields: [workflow_definition_id], references: [id])
+  started_by_user     user                 @relation("workflow_starter", fields: [started_by], references: [id])
+  tasks               workflow_task[]
+  audit_logs          workflow_audit_log[]
+
+  @@index([document_type, document_id])
+  @@index([company_id, status])
+}
+
+enum workflow_task_status {
+  OPEN
+  COMPLETED
+  DELEGATED
+  EXPIRED
+}
+
+// One row per person who must act. delegated_from_id records that a task
+// arrived through a delegation, so an approval made by a stand-in is still
+// traceable to whose authority it was exercised under.
+model workflow_task {
+  id                   String               @id @default(uuid())
+  company_id           String
+  workflow_instance_id String
+  step_order           Int
+  assignee_id          String
+  delegated_from_id    String?
+  status               workflow_task_status @default(OPEN)
+  decision             String?
+  comment              String?
+  due_at               DateTime?
+  completed_at         DateTime?
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @updatedAt
+
+  company           company           @relation(fields: [company_id], references: [id])
+  workflow_instance workflow_instance @relation(fields: [workflow_instance_id], references: [id], onDelete: Cascade)
+  assignee          user              @relation("task_assignee", fields: [assignee_id], references: [id])
+  delegated_from    user?             @relation("task_delegator", fields: [delegated_from_id], references: [id])
+
+  // Drives the task inbox: "everything waiting on me".
+  @@index([assignee_id, status])
+  @@index([workflow_instance_id, step_order])
+}
+
+enum workflow_audit_action {
+  ROUTED
+  APPROVED
+  REJECTED
+  DELEGATED
+  ESCALATED
+  CANCELLED
+}
+
+// Append-only, so no updated_at. actor_id is nullable because escalations are
+// raised by a timer rather than a person.
+model workflow_audit_log {
+  id                   String                @id @default(uuid())
+  company_id           String
+  workflow_instance_id String
+  actor_id             String?
+  action               workflow_audit_action
+  from_status          String?
+  to_status            String?
+  comment              String?
+  created_at           DateTime              @default(now())
+
+  company           company           @relation(fields: [company_id], references: [id])
+  workflow_instance workflow_instance @relation(fields: [workflow_instance_id], references: [id], onDelete: Cascade)
+  actor             user?             @relation("workflow_actor", fields: [actor_id], references: [id])
+
+  @@index([workflow_instance_id, created_at])
+}
+
+// Temporary reassignment of someone's approvals while they are away. Overlapping
+// active delegations for the same delegator must be rejected in the service.
+model delegation {
+  id           String   @id @default(uuid())
+  company_id   String
+  delegator_id String
+  delegate_id  String
+  start_date   DateTime @db.Date
+  end_date     DateTime @db.Date
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  company   company @relation(fields: [company_id], references: [id])
+  delegator user    @relation("delegator", fields: [delegator_id], references: [id])
+  delegate  user    @relation("delegate", fields: [delegate_id], references: [id])
+
+  @@index([delegator_id, start_date, end_date])
+}
+
+enum notification_channel {
+  IN_APP
+  EMAIL
+}
+
+enum notification_status {
+  QUEUED
+  SENT
+  FAILED
+}
+
+// An outbox, not a log: rows are written QUEUED and a sender moves them to SENT
+// or FAILED. Delivery fails routinely, so retry_count and error make a failed
+// send visible and retryable instead of silently lost.
+model notification {
+  id           String               @id @default(uuid())
+  company_id   String
+  recipient_id String
+  event_code   String
+  channel      notification_channel
+  subject      String?
+  body         String
+  status       notification_status  @default(QUEUED)
+  retry_count  Int                  @default(0)
+  error        String?
+  sent_at      DateTime?
+  read_at      DateTime?
+  created_at   DateTime             @default(now())
+  updated_at   DateTime             @updatedAt
+
+  company   company @relation(fields: [company_id], references: [id])
+  recipient user    @relation("notification_recipient", fields: [recipient_id], references: [id])
+
+  // Unread badge count for the signed-in user.
+  @@index([recipient_id, read_at])
+  // The sender's queue scan.
+  @@index([status, created_at])
+}
+
+// =============================================================================
+// Security Hardening (Sprint 11)
+//
+// Auth infrastructure rather than business data, which is why these tables
+// break the company_id-everywhere rule: a failed login for an unknown email
+// belongs to no tenant, and a refresh token is looked up by its hash, never
+// by company. security_audit_log keeps a nullable company_id so tenant-scoped
+// audit queries still work for events that do have one.
+// =============================================================================
+
+enum security_event_type {
+  LOGIN_SUCCEEDED
+  LOGIN_FAILED
+  LOGOUT
+  SESSION_REVOKED
+  PASSWORD_CHANGED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  MFA_ENROLLED
+  MFA_DISABLED
+  USER_CREATED
+  USER_DEACTIVATED
+  ROLE_ASSIGNED
+  ROLE_REVOKED
+  PERMISSION_CHANGED
+  SENSITIVE_DATA_VIEWED
+  SENSITIVE_DATA_CHANGED
+}
+
+// Covers the gap the per-module trails leave: authentication events, access
+// grants, and edits to sensitive master data.
+//
+// old_value / new_value make the difference between knowing something changed
+// and knowing what it changed from. The case that matters: a supplier's bank
+// account number. supplier_bank_detail records who last edited it, but without
+// the previous value a fraudulent redirect is indistinguishable from a routine
+// correction.
+//
+// user_id and company_id are both nullable because a failed login carries
+// neither — the email attempted may belong to no account at all.
+//
+// Append-only: no updated_at. An audit log that can be edited is not evidence.
+model security_audit_log {
+  id          String              @id @default(uuid())
+  company_id  String?
+  user_id     String?
+  event_type  security_event_type
+  entity_type String?
+  entity_id   String?
+  old_value   Json?
+  new_value   Json?
+  detail      String?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime            @default(now())
+
+  company company? @relation(fields: [company_id], references: [id])
+  user    user?    @relation("audit_actor", fields: [user_id], references: [id])
+
+  @@index([company_id, created_at])
+  @@index([user_id, created_at])
+  @@index([event_type, created_at])
+  @@index([entity_type, entity_id])
+}
+
+// Stores a hash, never the token itself — a leaked database must not hand out
+// working sessions.
+//
+// token_family_id groups a rotation chain. If an already-revoked token is
+// presented, the token was stolen: revoke the entire family, not just that row.
+model refresh_token {
+  id              String    @id @default(uuid())
+  user_id         String
+  token_family_id String
+  token_hash      String    @unique
+  issued_at       DateTime  @default(now())
+  expires_at      DateTime
+  revoked_at      DateTime?
+  replaced_by_id  String?   @unique
+  ip_address      String?
+  user_agent      String?
+
+  user        user           @relation(fields: [user_id], references: [id])
+  replaced_by refresh_token? @relation("token_rotation", fields: [replaced_by_id], references: [id])
+  replaces    refresh_token? @relation("token_rotation")
+
+  @@index([user_id, revoked_at])
+  @@index([token_family_id])
+  @@index([expires_at])
+}
+
+// Deliberately has no foreign key to user: the whole point is recording attempts
+// against usernames that may not exist. Feeds rate limiting and lockout, and
+// the (ip_address, attempted_at) index supports "is this address spraying us?".
+model login_attempt {
+  id                 String   @id @default(uuid())
+  username_attempted String
+  ip_address         String?
+  user_agent         String?
+  succeeded          Boolean
+  failure_reason     String?
+  attempted_at       DateTime @default(now())
+
+  @@index([username_attempted, attempted_at])
+  @@index([ip_address, attempted_at])
+}
+
+enum mfa_method {
+  TOTP
+  SMS
+  EMAIL
+}
+
+// `secret` must be encrypted at rest — it is the seed that generates valid
+// codes, so plaintext here defeats the point of having MFA.
+model user_mfa_setting {
+  id          String     @id @default(uuid())
+  user_id     String
+  method      mfa_method
+  secret      String
+  is_enabled  Boolean    @default(false)
+  enrolled_at DateTime?
+  created_at  DateTime   @default(now())
+  updated_at  DateTime   @updatedAt
+
+  user user @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, method])
+}
+
+// =============================================================================
+// Platform Infrastructure
+//
+// Tables the specified features depend on but that no sprint lists explicitly.
+// =============================================================================
+
+enum sequence_document_type {
+  EMPLOYEE
+  LEAVE_REQUEST
+  STOCK_MOVEMENT
+  INVENTORY_ADJUSTMENT
+  SALES_QUOTATION
+  SALES_ORDER
+  DELIVERY
+  SALES_INVOICE
+  PURCHASE_REQUISITION
+  PURCHASE_ORDER
+  GOODS_RECEIPT
+  SUPPLIER_INVOICE
+  JOURNAL_ENTRY
+  PAYMENT
+}
+
+// Backs every human-readable document number in the schema (SO-2026-00042 and
+// its fourteen siblings). issue-038 and issue-039 require numbers to come from
+// "a sequence or locked counter, never by counting rows" — counting rows races
+// under concurrency and reuses numbers after a cancellation.
+//
+// A plain Postgres sequence cannot serve this: numbering is per company AND
+// resets each year, so the counter is keyed by all three.
+//
+// Usage: SELECT ... FOR UPDATE on this row inside the same transaction that
+// creates the document, so two concurrent orders cannot read the same value.
+model document_sequence {
+  company_id    String
+  document_type sequence_document_type
+  year          Int
+  last_number   Int                    @default(0)
+  updated_at    DateTime               @updatedAt
+
+  company company @relation(fields: [company_id], references: [id])
+
+  @@id([company_id, document_type, year])
+}
+
+enum posting_key {
+  ACCOUNTS_RECEIVABLE
+  ACCOUNTS_PAYABLE
+  SALES_REVENUE
+  SALES_DISCOUNT
+  INVENTORY
+  COST_OF_GOODS_SOLD
+  CASH
+  BANK
+  DEFAULT_EXPENSE
+  RETAINED_EARNINGS
+}
+
+// The bridge between the business modules and the ledger. When a sales invoice
+// posts its journal entry, this is what answers "which account is Accounts
+// Receivable?".
+//
+// It must be a table rather than constants in code because the chart of
+// accounts is per company: two tenants can use different account codes for the
+// same purpose, so a hardcoded '1100' is correct for one company and wrong for
+// the next. This is also where issue-054's "single default expense account is
+// assumed for now" actually lives.
+model account_mapping {
+  id          String      @id @default(uuid())
+  company_id  String
+  posting_key posting_key
+  account_id  String
+  updated_by  String
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  company         company @relation(fields: [company_id], references: [id])
+  account         account @relation(fields: [account_id], references: [id])
+  updated_by_user user    @relation("account_mapping_editor", fields: [updated_by], references: [id])
+
+  @@unique([company_id, posting_key])
+}
+
+// Required by Sprint 11's /api/auth/password/reset-request and
+// /reset-confirm endpoints, which the docs' entity list omits.
+//
+// Stores a hash, never the token — the emailed value must not be recoverable
+// from a leaked database. used_at makes the token single-use: a reset link
+// found later in an inbox or a proxy log cannot be replayed.
+model password_reset_token {
+  id         String    @id @default(uuid())
+  user_id    String
+  token_hash String    @unique
+  expires_at DateTime
+  used_at    DateTime?
+  ip_address String?
+  created_at DateTime  @default(now())
+
+  user user @relation(fields: [user_id], references: [id])
+
+  @@index([user_id, expires_at])
+}
