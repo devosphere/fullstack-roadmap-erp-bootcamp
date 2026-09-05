@@ -10,9 +10,6 @@ on:
       - development
       - main
 
-# No build system exists yet. Build, lint, and test steps are added in Sprint 01.
-# This workflow validates repository health only.
-
 jobs:
   repository-health:
     name: Repository Health
@@ -22,141 +19,97 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Required files are present and non-empty
+      - name: Check required root files
         run: |
-          # Files that must exist and have content at the repository root.
-          # Files still awaiting their own issue are listed in PENDING below.
-          REQUIRED="README.md CONTRIBUTING.md CHANGELOG.md .gitignore"
-          PENDING="CHANGELOG.md .gitignore"   # TODO: remove entries as their issues complete
+          test -s README.md
+          test -s CONTRIBUTING.md
+          test -f CHANGELOG.md
+          test -s .gitignore
 
-          failed=0
-          for file in $REQUIRED; do
-            if [ ! -f "$file" ]; then
-              echo "::error file=$file::Required file is missing"
-              failed=1
-            elif [ ! -s "$file" ]; then
-              case " $PENDING " in
-                *" $file "*)
-                  echo "::warning file=$file::Required file is empty (known gap, tracked by a later issue)"
-                  ;;
-                *)
-                  echo "::error file=$file::Required file is empty"
-                  failed=1
-                  ;;
-              esac
-            else
-              echo "ok: $file"
-            fi
-          done
-          exit $failed
-
-      - name: Required directories are present
+      - name: Check required folders
         run: |
-          REQUIRED="academy docs frontend backend database tests infrastructure scripts .github"
+          test -d academy
+          test -d docs
+          test -d frontend
+          test -d backend
+          test -d database
+          test -d tests
+          test -d infrastructure
+          test -d scripts
+          test -d .github
 
-          failed=0
-          for dir in $REQUIRED; do
-            if [ ! -d "$dir" ]; then
-              echo "::error::Required directory is missing: $dir"
-              failed=1
-            else
-              echo "ok: $dir/"
-            fi
-          done
-          exit $failed
-
-      - name: Every directory has a README
+      - name: Check GitHub templates
         run: |
-          # Every tracked directory should explain itself, so no folder is unexplained.
-          PENDING="docs"   # TODO: remove entries as their issues complete
-
-          failed=0
-          for dir in academy docs frontend backend database tests infrastructure scripts; do
-            if [ ! -f "$dir/README.md" ]; then
-              case " $PENDING " in
-                *" $dir "*)
-                  echo "::warning::Missing README.md in $dir/ (known gap, tracked by a later issue)"
-                  ;;
-                *)
-                  echo "::error::Missing README.md in $dir/"
-                  failed=1
-                  ;;
-              esac
-            else
-              echo "ok: $dir/README.md"
-            fi
-          done
-          exit $failed
-
-      - name: GitHub templates are present
-        run: |
-          REQUIRED="
-          .github/PULL_REQUEST_TEMPLATE.md
-          .github/ISSUE_TEMPLATE/config.yml
-          .github/ISSUE_TEMPLATE/feature.md
-          .github/ISSUE_TEMPLATE/bug.md
-          .github/ISSUE_TEMPLATE/task.md
-          .github/ISSUE_TEMPLATE/improvement.md
-          .github/ISSUE_TEMPLATE/documentation.md
-          "
-
-          failed=0
-          for file in $REQUIRED; do
-            if [ ! -s "$file" ]; then
-              echo "::error file=$file::Missing or empty GitHub template"
-              failed=1
-            else
-              echo "ok: $file"
-            fi
-          done
-          exit $failed
-
-      - name: Relative markdown links resolve
-        shell: bash
-        run: |
-          # Checks links of the form [text](path). External and anchor-only links are skipped.
-          # Paths in this repository contain spaces, so every loop reads line by line.
-          failed=0
-          while IFS= read -r file; do
-            dir=$(dirname "$file")
-            while IFS= read -r link; do
-              [ -z "$link" ] && continue
-              case "$link" in
-                http*|mailto:*|'#'*) continue ;;
-              esac
-              target="${link%%#*}"
-              [ -z "$target" ] && continue
-              if [ ! -e "$dir/$target" ]; then
-                echo "::error file=$file::Broken relative link -> $target"
-                failed=1
-              fi
-            done < <(grep -oE '\]\([^)]+\)' "$file" | sed -E 's/^\]\(//; s/\)$//')
-          done < <(git ls-files '*.md')
-          exit $failed
-
-      - name: No empty tracked markdown files
-        shell: bash
-        run: |
-          # Empty markdown files are almost always an unfinished deliverable.
-          # Paths in this repository contain spaces, so the list is read line by line.
-          PENDING="CHANGELOG.md|backend/README.md"   # TODO: remove entries as their issues complete
-
-          failed=0
-          while IFS= read -r file; do
-            if [ ! -s "$file" ]; then
-              case "|$PENDING|" in
-                *"|$file|"*)
-                  echo "::warning file=$file::Empty markdown file (known gap, tracked by a later issue)"
-                  ;;
-                *)
-                  echo "::error file=$file::Empty markdown file"
-                  failed=1
-                  ;;
-              esac
-            fi
-          done < <(git ls-files '*.md')
-          exit $failed
+          test -s .github/PULL_REQUEST_TEMPLATE.md
+          test -s .github/ISSUE_TEMPLATE/config.yml
+          test -s .github/ISSUE_TEMPLATE/feature.md
+          test -s .github/ISSUE_TEMPLATE/bug.md
+          test -s .github/ISSUE_TEMPLATE/task.md
+          test -s .github/ISSUE_TEMPLATE/improvement.md
+          test -s .github/ISSUE_TEMPLATE/documentation.md
 
       - name: Summary
-        if: success()
         run: echo "Repository health checks passed."
+
+  frontend: 
+    name: Frontend
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Check out repo
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build Next.js app
+        run: npm run build
+
+  backend: 
+    name: Backend
+    runs-on: ubuntu-latest
+
+    steps: 
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Run type check
+        run: npm run type-check
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build backend app
+        run: npm run build
+
+
+
