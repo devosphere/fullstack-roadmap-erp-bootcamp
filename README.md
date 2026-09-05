@@ -21,6 +21,49 @@ The objective is not simply to build an ERP.
 
 The objective is to become a professional software engineer capable of delivering enterprise software from business requirements through production deployment.
 
+# Docker Development
+
+The local development stack runs the frontend and backend through Docker Compose. The backend connects to the configured Supabase PostgreSQL database through `DATABASE_URL`.
+
+## First-time setup
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+After startup:
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:3001/api
+
+## Common commands
+
+```bash
+docker compose up
+docker compose up --build
+docker compose down
+docker compose down -v
+```
+
+Use `docker compose down` to stop containers. This setup does not run a local PostgreSQL container.
+
+## Database migrations
+
+Run Prisma migrations from inside the backend container:
+
+```bash
+docker compose exec backend npx prisma migrate deploy
+```
+
+For local development migration creation:
+
+```bash
+docker compose exec backend npx prisma migrate dev
+```
+
+Compose passes `DATABASE_URL` from `.env`, and the backend connects directly to the Supabase PostgreSQL database.
+
 # Directory Structure
 ```text
 fullstack-roadmap-erp-bootcamp/
