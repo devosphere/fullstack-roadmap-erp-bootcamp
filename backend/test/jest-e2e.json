@@ -1,6 +1,17 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
-  "rootDir": ".",
+  "rootDir": "..",
+  "setupFiles": ["<rootDir>/test/setup-e2e.ts"],
+  "moduleNameMapper": {
+    "^@/generated/prisma/client$": "<rootDir>/test/mocks/prisma-client.ts",
+    "^@generated/prisma/client$": "<rootDir>/test/mocks/prisma-client.ts",
+    "^@/(.*)$": "<rootDir>/$1",
+    "^@module/(.*)$": "<rootDir>/module/$1",
+    "^@generated/(.*)$": "<rootDir>/generated/$1",
+    "^@nestjs/jwt$": "<rootDir>/test/mocks/nest-jwt.ts",
+    "^module/(.*)$": "<rootDir>/module/$1",
+    "^src/(.*)$": "<rootDir>/src/$1"
+  },
   "testEnvironment": "node",
   "testRegex": ".e2e-spec.ts$",
   "transform": {

@@ -1,0 +1,7 @@
+{
+  "scripts": {
+    "lint": "npm --prefix backend run lint && npm --prefix frontend run lint",
+    "lint:check": "npm --prefix backend run lint -- --no-fix && npm --prefix frontend run lint",
+    "typecheck": "npm --prefix backend run typecheck && npm --prefix frontend run typecheck"
+}
+}
