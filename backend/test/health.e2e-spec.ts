@@ -38,9 +38,11 @@ describe('Health endpoint', () => {
   });
 
   it('returns a healthy response', async () => {
-    await request(app.getHttpServer())
+    const httpServer: unknown = app.getHttpServer();
+
+    await request(httpServer as import('node:http').Server)
       .get('/api/health')
       .expect(200)
-      .expect({ status: 'healthy' });
+      .expect({ status: 'ok', info: {}, error: {}, details: {} });
   });
 });

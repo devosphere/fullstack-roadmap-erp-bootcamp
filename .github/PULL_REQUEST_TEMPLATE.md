@@ -1,12 +1,19 @@
-<!-- Title must follow Conventional Commits: <type>(<scope>): <description> -->
+<!--
+Title: <type>(<scope>): <description>
+Use Conventional Commits. Example: feat(auth): add access-token login
+Open feature, bugfix, docs, and chore PRs against development, never main.
+Remove sections that are not applicable, but explain any unchecked required item.
+-->
 
 ## Summary
 
-<!-- What changed and why. Two or three sentences. -->
+<!-- What changed, why it is needed, and the user or business outcome. Keep this to 2-4 sentences. -->
 
-## Related Issue
+## Related Work
 
 Closes #
+
+<!-- Link related issues, ADRs, API docs, designs, or follow-up work when applicable. -->
 
 ## Type of Change
 
@@ -14,50 +21,107 @@ Closes #
 - [ ] Bug fix
 - [ ] Improvement / refactor
 - [ ] Documentation
+- [ ] Security
 - [ ] Chore / CI / infrastructure
 
 ## Changes Implemented
 
-<!-- Bullet the actual changes. Group by frontend / backend / database / docs where useful. -->
+<!-- Group the actual changes by area. Delete unused headings. -->
+
+### Frontend
 
 -
 
+### Backend / API
+
+-
+
+### Database / Infrastructure
+
+- [ ] Not applicable
+- [ ] Migration included (name it below)
+- [ ] No migration required
+
+### Documentation
+
+-
+
+## Behaviour and Risk
+
+<!-- State observable behavior changes, compatibility impact, and risks. Write “None” where appropriate. -->
+
+- **User-facing behavior:**
+- **Breaking change / migration required:**
+- **Security or privacy impact:**
+- **Performance impact:**
+- **Rollback plan:**
+
 ## Testing Evidence
 
-<!-- How you verified this works. Commands run, output, manual steps. -->
-<!-- If there is nothing to run yet, say so explicitly and describe what you checked instead. -->
+<!-- List exact commands and outcomes. State what was not tested and why. Do not mark a check passed unless you ran it. -->
 
 ```text
-
+Command:
+Result:
 ```
 
-## Screenshots
+### Manual Verification
 
-<!-- Required for UI changes. Delete this section if not applicable. -->
+<!-- Include route, click path, test data, and observed result. Write “Not applicable” if no manual test is needed. -->
+
+-
+
+### Not Verified / Follow-up
+
+<!-- Examples: requires a test database, external service unavailable, deferred performance test. -->
+
+-
+
+## Screenshots or Recording
+
+<!-- Required for UI changes. Delete this section when not applicable. -->
 
 | Before | After |
-|--------|-------|
-| | |
+| --- | --- |
+|  |  |
 
 ---
 
 ## Acceptance Criteria
 
-<!-- Copy the acceptance criteria from the linked issue and tick them off. -->
+<!-- Copy the linked issue’s acceptance criteria and tick each item only after verification. -->
 
-- [ ]
 - [ ]
 
 ## Checklist
 
-- [ ] Branch follows the naming convention in [CONTRIBUTING.md](../CONTRIBUTING.md)
+### Delivery
+
+- [ ] Branch follows the naming convention in [CONTRIBUTING.MD](../CONTRIBUTING.MD)
 - [ ] Commits follow Conventional Commits
 - [ ] This PR targets `development`, not `main`
-- [ ] Documentation updated in this same Pull Request
-- [ ] Acceptance criteria from the linked issue are met
-- [ ] CI is green
+- [ ] Scope is limited to the linked issue; unrelated changes are excluded
+- [ ] No secrets, credentials, or sensitive production data are included
+
+### Quality
+
+- [ ] Code follows the academy coding standards
+- [ ] Lint and formatting checks pass
+- [ ] Relevant unit, integration, and/or E2E tests pass
+- [ ] New or changed behavior has appropriate test coverage
+- [ ] Documentation changed with the implementation, when applicable
+- [ ] Database migration and rollback impact were reviewed, when applicable
+- [ ] Acceptance criteria above are met
+
+### Review and Merge
+
 - [ ] Reviewer assigned
+- [ ] Reviewer feedback addressed
+- [ ] CI is green
+- [ ] Ready for squash merge into `development`
 
 ## Reviewer Notes
 
-<!-- Anything the reviewer should look at first, or decisions you want challenged. -->
+<!-- Name the files or decisions to inspect first, plus assumptions or trade-offs that need review. -->
+
+-
